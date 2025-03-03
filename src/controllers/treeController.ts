@@ -94,7 +94,7 @@ export const createTree=async(req:Request,res:Response,next:NextFunction): Promi
 }
 
 export const addEdge=async(req:Request,res:Response,next:NextFunction): Promise<void> =>{
-    const treeId=res.locals.cookieData.treeId;
+    const treeId=res.locals.cookieData?.treeId;
     const edge=req.body as IEdge;
 
     try{
@@ -103,6 +103,31 @@ export const addEdge=async(req:Request,res:Response,next:NextFunction): Promise<
             new:true,
             runValidators:true,
         });
+
+        if(!tree){
+            res.status(400).json({success:false,message:"Tree not found"})
+            return
+        }
+
+        return next();
+    }catch(e){
+        res.status(500).json({success:false,message:"Error adding edge"});
+        return;
+    }
+}
+
+export const updateEdge=async(req:Request,res:Response,next:NextFunction):Promise<void> =>{
+    const treeId=res.locals.cookieData?.treeId;
+
+    const edges=req.body as Array<IEdge>;
+
+    try{
+        const tree=await Tree.findByIdAndUpdate(treeId,{
+            edges:edges},{
+                new:true,
+                runValidators:true,
+            }
+        );
 
         if(!tree){
             res.status(400).json({success:false,message:"Tree not found"})
