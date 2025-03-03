@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 
 import { addTree, getTreeByID, TreeData } from "../services/treeService";
 import mongoose from "mongoose";
-import Tree from "../models/treeModel";
+import Tree, { IEdge } from "../models/treeModel";
 
 export const getTree=async (req:Request,res:Response) : Promise <void> =>{
 
@@ -91,4 +91,27 @@ export const createTree=async(req:Request,res:Response,next:NextFunction): Promi
         res.status(500).json({ success: false, message: "Error creating tree" });
     }
 
+}
+
+export const addEdge=async(req:Request,res:Response,next:NextFunction): Promise<void> =>{
+    const treeId=res.locals.cookieData.treeId;
+    const edge=req.body as IEdge;
+
+    try{
+        const tree=await Tree.findByIdAndUpdate(treeId,{
+            $push:{edges:edge}},{
+            new:true,
+            runValidators:true,
+        });
+
+        if(!tree){
+            res.status(400).json({success:false,message:"Tree not found"})
+            return
+        }
+
+        return next();
+    }catch(e){
+        res.status(500).json({success:false,message:"Error adding edge"});
+        return;
+    }
 }
