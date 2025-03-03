@@ -1,6 +1,17 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
 
-const UserSchema = new Schema({
+interface IUser extends Document{
+    mode:string,
+    email:string,
+    username:string,
+    gender:string,
+    dob:string,
+    password:string,
+    treeName:string,
+    treeId:Types.ObjectId
+}
+
+const UserSchema = new Schema<IUser>({
     mode:{
         type:String,
         required:true,
@@ -35,4 +46,6 @@ const UserSchema = new Schema({
     }
 });
 
-export default mongoose.model('user', UserSchema);
+const Tree = mongoose.model<IUser>("User", UserSchema);
+export default Tree;
+export { IUser };
