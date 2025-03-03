@@ -1,6 +1,6 @@
 import e from "express"
 
-import { registerUser,loginUser } from "../controllers/authController";
+import { registerUser,loginUser, clearCookies } from "../controllers/authController";
 import { setCookie } from "../utils/setCookie";
 
 const router=e.Router();

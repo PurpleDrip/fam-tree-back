@@ -1,9 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken"
 
 import User from "../models/userModel";
 import { getTreeByID } from "../services/treeService";
 import { ITree } from "../models/treeModel";
+import redis from "../config/redis";
 
 export const registerUser=async (req:Request,res:Response,next:NextFunction):Promise<void>=>{
     const { username, gender, dob, password, treeId, mode } = req.body;
@@ -117,3 +119,41 @@ export const loginUser=async (req:Request,res:Response,next:NextFunction):Promis
         return 
     }
 }
+
+export const clearCookies = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const TOKEN_NAME = process.env.TOKEN_NAME as string;
+        const token = req.body[TOKEN_NAME] || req.cookies[TOKEN_NAME];
+
+        // If no token, respond early
+        if (!token) {
+            res.status(400).json({ message: "No token provided" });
+            return 
+        }
+
+        // Clear cookie
+        res.clearCookie(TOKEN_NAME);
+
+        let treeId: string | undefined;
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { treeId: string };
+            treeId = decoded.treeId;
+        } catch (err: unknown) {
+            const error = err as { message: string };
+            res.status(401).json({ message: "Invalid token", error: error.message });
+            return 
+        }
+
+        // If treeId is found, delete from Redis
+        if (treeId) {
+            await redis.del(`session:tree:${treeId}`);
+        }
+
+        res.status(200).json({ message: "Cookies removed successfully" });
+        return 
+    } catch (error: unknown) {
+        const err = error as { message: string };
+        res.status(500).json({ message: "Error clearing cookies", error: err.message });
+        return 
+    }
+};
