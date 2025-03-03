@@ -123,7 +123,7 @@ export const updateEdge=async(req:Request,res:Response,next:NextFunction):Promis
 
     try{
         const tree=await Tree.findByIdAndUpdate(treeId,{
-            edges:edges},{
+            edges},{
                 new:true,
                 runValidators:true,
             }
@@ -136,7 +136,7 @@ export const updateEdge=async(req:Request,res:Response,next:NextFunction):Promis
 
         return next();
     }catch(e){
-        res.status(500).json({success:false,message:"Error adding edge"});
+        res.status(500).json({success:false,message:"Error updating edge"});
         return;
     }
 }
