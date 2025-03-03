@@ -5,13 +5,13 @@ export const alert = (msg: string) => {
 }
 
 export const status = (msg: string) => {
-    console.log(chalk.bgYellow(msg));
+    console.log(chalk.yellow(msg));
 }
 
 export const success = (msg: string) => {
-    console.log(chalk.bgGreen(msg));
+    console.log(chalk.green(msg));
 }
 
 export const info = (msg: string) => {
-    console.log(chalk.bgBlue(msg));
+    console.log(chalk.blue(msg));
 }
