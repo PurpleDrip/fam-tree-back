@@ -4,7 +4,7 @@ import redis from "../config/redis";
 import { getNodeByID } from "./nodeService";
 import { INode } from "../models/nodeModel";
 
-interface TreeData {
+export interface TreeData {
     treeName: string;
     nodes: INode[];
     edges: ITree["edges"];

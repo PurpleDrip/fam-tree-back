@@ -3,9 +3,10 @@ import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 
 import User from "../models/userModel";
-import { getTreeByID } from "../services/treeService";
+import { getTreeByID, TreeData } from "../services/treeService";
 import { ITree } from "../models/treeModel";
 import redis from "../config/redis";
+import { INode } from "../models/nodeModel";
 
 export const registerUser=async (req:Request,res:Response,next:NextFunction):Promise<void>=>{
     const { username, gender, dob, password, treeId, mode } = req.body;
@@ -14,7 +15,7 @@ export const registerUser=async (req:Request,res:Response,next:NextFunction):Pro
         id: string;
         treeId: string;
         treeName: string;
-        nodes: ITree['nodes'];
+        nodes: Array<INode>;
         edges: ITree['edges'];
     } = { 
         id: "", 
@@ -34,14 +35,14 @@ export const registerUser=async (req:Request,res:Response,next:NextFunction):Pro
         const hashedPassword = await bcrypt.hash(password, 10);
 
         if (treeId) {
-            const tree:ITree|null= await getTreeByID(treeId);
+            const tree:TreeData|null= await getTreeByID(treeId as string);
             if (!tree) {
                 res.status(400).json({ message: "Tree not found" });
                 return ;
             } 
 
             data.treeId = treeId;
-            data.treeName = tree.name;
+            data.treeName = tree.treeName;
             data.nodes = tree.nodes || [];
             data.edges = tree.edges || [];
         }
@@ -86,7 +87,7 @@ export const loginUser=async (req:Request,res:Response,next:NextFunction):Promis
         let data:{id: string;
                 treeId: string;
                 treeName: string;
-                nodes: ITree['nodes'];
+                nodes: Array<INode>;
                 edges: ITree['edges'] 
             }= {
                 id: user._id.toString(),
