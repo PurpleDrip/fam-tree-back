@@ -64,3 +64,56 @@ export const registerUser=async (req:Request,res:Response,next:NextFunction):Pro
         next(error);
     }
 }
+
+export const loginUser=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
+    try {
+        const { username, password } = req.body;
+
+        const user = await User.findOne({ username });
+        if (!user) {
+            res.status(404).json({ success: false, message: "User not found" });
+            return 
+        }
+
+        const isMatch =await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            res.status(400).json({ success: false, message: "Invalid credentials" });
+            return 
+        }
+
+        let data:{id: string;
+                treeId: string;
+                treeName: string;
+                nodes: ITree['nodes'];
+                edges: ITree['edges'] 
+            }= {
+                id: user._id.toString(),
+                treeId: user.treeId.toString(),
+                treeName: user.treeName,
+                nodes: [],
+                edges: [],
+            };
+
+        if (user.treeId) {
+            try {
+                const tree = await getTreeByID(user.treeId.toString());
+                if (!tree) {
+                    res.status(400).json({ message: "Tree not found" });
+                    return 
+                }
+                data.nodes = tree.nodes || [];
+                data.edges = tree.edges || [];
+            } catch (error) {
+                res.status(500).json({ message: "Error fetching tree" });
+                return 
+            }
+        }
+        res.locals.data = data;
+        return next();
+
+    } catch (error) {
+        console.error("Error logging in:", error);
+        res.status(500).json({ success: false, message: "Error logging in" });
+        return 
+    }
+}
