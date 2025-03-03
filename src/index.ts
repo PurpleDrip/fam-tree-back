@@ -3,7 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 
-import { info, success } from "./utils/logger";
+import { alert, info, success } from "./utils/logger";
+import connectDB from "./config/db";
 
 dotenv.config();
 
@@ -29,7 +30,12 @@ app.use((err:any, req: Request, res:Response, next:NextFunction) => {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   });
 
-app.listen(PORT, () => {
-    success(`\n✅ Server is running on port ${PORT}`);
-    info(`RestAPI running at http://localhost:${PORT}\n`)
+connectDB().then(() => {
+    app.listen(PORT, () => {
+        success(`✅ Server is running on port ${PORT}`);
+        info(`RestAPI running at http://localhost:${PORT}\n`)
+    });
+}).catch(err => {
+    alert("❌ Server startup failed due to DB connection issue:"+ err);
+    process.exit(1);
 });
