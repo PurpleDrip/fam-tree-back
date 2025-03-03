@@ -3,6 +3,7 @@ import Tree, { ITree } from "../models/treeModel";
 import redis from "../config/redis";
 import { getNodeByID } from "./nodeService";
 import { INode } from "../models/nodeModel";
+import User, { IUser } from "../models/userModel";
 
 export interface TreeData {
     treeName: string;
@@ -54,3 +55,12 @@ export const getTreeByID = async (id: string): Promise<TreeData | null> => {
         return null;
     }
 };
+
+export const addTree = async (userId:string, treeId:string, treeName:string):Promise <IUser|null> => {
+    try {
+        const user=await User.findByIdAndUpdate(userId, { treeId, treeName }, { new: true, runValidators: true });
+        return user
+    } catch (error) {
+        return null;
+    }
+}

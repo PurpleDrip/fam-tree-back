@@ -46,6 +46,6 @@ const UserSchema = new Schema<IUser>({
     }
 });
 
-const Tree = mongoose.model<IUser>("User", UserSchema);
-export default Tree;
+const User = mongoose.model<IUser>("User", UserSchema);
+export default User;
 export { IUser };

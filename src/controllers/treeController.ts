@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 
-import { getTreeByID, TreeData } from "../services/treeService";
-import mongoose, { mongo } from "mongoose";
+import { addTree, getTreeByID, TreeData } from "../services/treeService";
+import mongoose from "mongoose";
+import Tree from "../models/treeModel";
+import redis from "../config/redis";
 
 export const getTree=async (req:Request,res:Response) : Promise <void> =>{
 
@@ -53,4 +55,45 @@ export const getTreeById=async (req:Request,res:Response) : Promise <void> =>{
         res.status(500).json({success:false,message:"Error fetching tree"})
         return;
     }
+}
+
+export const createTree=async(req:Request,res:Response): Promise<void> =>{
+
+    const id=res.locals.cookieData.id;
+
+    const { treeName, type, nodes, edges } = req.body;
+
+    try{
+        const existingTree = await Tree.findOne({ name: treeName });
+
+        if (existingTree) {
+            res.status(400).json({ success: false, message: "Tree with this name already exists." });
+            return;
+        }
+
+        const newTree = new Tree({
+            name:treeName,
+            type: type || "custom",
+            nodes: nodes || [],
+            edges: edges || []
+        });
+
+        const user=await addTree(id,newTree.id,newTree.name);
+
+        if(!user){
+            res.status(500).json({success:false,message:"Error updating user db"});
+            return;
+        }
+
+        const tree= await getTreeByID(newTree.id);
+
+        await newTree.save();
+
+        res.status(201).json({ success: true, tree: newTree });
+        return;
+    }catch (error) {
+        console.error("Error creating tree:", error);
+        res.status(500).json({ success: false, message: "Error creating tree" });
+    }
+
 }
