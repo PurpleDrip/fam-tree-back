@@ -1,7 +1,7 @@
 import chalk from "chalk";
 
 export const alert = (msg: string) => {
-    console.log(chalk.bgRed(msg));
+    console.log(chalk.red(msg));
 }
 
 export const status = (msg: string) => {
