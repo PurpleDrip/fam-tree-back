@@ -59,7 +59,7 @@ export const registerUser=async (req:Request,res:Response,next:NextFunction):Pro
         res.locals.newUser = newUser;
         
         return next(); 
-        
+
     } catch (error) {
         next(error);
     }
