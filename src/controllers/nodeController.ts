@@ -1,9 +1,8 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import Tree from "../models/treeModel";
 import Node from "../models/nodeModel";
-import { updateCache } from "../services/redisService";
 
-export const createNode=async (req:Request,res:Response)=>{
+export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
     console.log("Received Files:", req.files); 
     console.log("Received Body:", req.body);
 
@@ -37,13 +36,8 @@ export const createNode=async (req:Request,res:Response)=>{
 
         await Tree.findByIdAndUpdate(treeId, { $push: { nodes: newNode._id } });
 
-        const tree=await updateCache(treeId);
-
-        if(!tree){
-            res.status(500).json({success:false,message:"Error updating cache."})
-        }
-        res.status(201).json({ success: true, node: newNode });
-        return;
+        res.locals.cacheData.treeId=treeId;
+        return next();
     }catch(error){
         console.error("Error creating node:", error);
         res.status(500).json({ success: false, message: "Error creating node" });

@@ -3,7 +3,7 @@ import { ITree } from "../models/treeModel";
 import redis from "../config/redis";
 import { INode } from "../models/nodeModel";
 import User, { IUser } from "../models/userModel";
-import { updateCache } from "./redisService";
+import { GenerteAndUpdateCache} from "./redisService";
 
 export interface TreeData {
     treeName: string;
@@ -26,7 +26,7 @@ export const getTreeByID = async (id: string): Promise<TreeData | null> => {
         }
 
         console.log("Cache Miss! Fetching from DB...");
-        const tree=updateCache(id);
+        const tree=GenerteAndUpdateCache(id);
 
         return tree;
         

@@ -1,9 +1,8 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
 import { addTree, getTreeByID, TreeData } from "../services/treeService";
 import mongoose from "mongoose";
 import Tree from "../models/treeModel";
-import { updateCache } from "../services/redisService";
 
 export const getTree=async (req:Request,res:Response) : Promise <void> =>{
 
@@ -57,7 +56,7 @@ export const getTreeById=async (req:Request,res:Response) : Promise <void> =>{
     }
 }
 
-export const createTree=async(req:Request,res:Response): Promise<void> =>{
+export const createTree=async(req:Request,res:Response,next:NextFunction): Promise<void> =>{
 
     const id=res.locals.cookieData.id;
 
@@ -85,12 +84,8 @@ export const createTree=async(req:Request,res:Response): Promise<void> =>{
             return;
         }
 
-        const tree= await updateCache(newTree.id);
-
         await newTree.save();
-
-        res.status(201).json({ success: true, tree: newTree });
-        return;
+        return next();
     }catch (error) {
         console.error("Error creating tree:", error);
         res.status(500).json({ success: false, message: "Error creating tree" });
