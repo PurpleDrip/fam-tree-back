@@ -4,7 +4,12 @@ interface ITree extends Document {
     name: string;
     type: string;
     nodes: Types.ObjectId[];  
-    edges: { source: Types.ObjectId; target: Types.ObjectId }[]; 
+    edges: Array<IEdge>; 
+}
+
+export interface IEdge {
+    source:Types.ObjectId,
+    target:Types.ObjectId
 }
 
 const TreeSchema = new Schema<ITree>({
