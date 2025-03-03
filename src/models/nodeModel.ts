@@ -1,4 +1,20 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
+
+interface INode extends Document{
+    name:string,
+    realtion:string,
+    gender:string,
+    description:string,
+    dob:string,
+    images:Array<string>,
+    mainImg:string,
+    role:string,
+    treeId:Types.ObjectId,
+    position:{
+        x:number,
+        y:number,
+    }
+}
 
 const NodeSchema = new Schema({
     name: { 

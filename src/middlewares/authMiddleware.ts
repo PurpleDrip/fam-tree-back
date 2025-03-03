@@ -46,7 +46,7 @@ export const CheckForCookies = async (req: Request, res: Response): Promise<void
                     }
                     nodes = tree.nodes || [];
                     edges = tree.edges || [];
-                    treeName = tree.name || "";
+                    treeName = tree.treeName || "";
                 } catch (e) {
                     res.status(500).json({ message: "Error fetching tree" });
                     return;
