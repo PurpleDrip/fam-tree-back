@@ -5,6 +5,7 @@ import { getTreeByID } from "../services/treeService";
 import redis from "../config/redis";
 import { info } from "../utils/logger";
 import { ITree } from "../models/treeModel";
+import { INode } from "../models/nodeModel";
 
 export const CheckForCookies = async (req: Request, res: Response): Promise<void> => {
     const TOKEN_NAME = process.env.TOKEN_NAME as string;
@@ -33,7 +34,7 @@ export const CheckForCookies = async (req: Request, res: Response): Promise<void
         if (!data) { // Cache Miss
             info("\nCache Miss! Fetching from DB...\n");
 
-            let nodes :ITree['nodes']= [];
+            let nodes :Array<INode> = [];
             let edges :ITree['edges']= [];
             let treeName :string= "";
 

@@ -60,6 +60,6 @@ const NodeSchema = new Schema<INode>({
     }
 });
 
-const Tree = mongoose.model<INode>("Node", NodeSchema);
+const Node = mongoose.model<INode>("Node", NodeSchema);
 export default Node;
 export { INode };
