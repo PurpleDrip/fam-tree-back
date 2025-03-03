@@ -2,7 +2,7 @@ import mongoose, { Document, Schema, Types } from 'mongoose';
 
 interface INode extends Document{
     name:string,
-    realtion:string,
+    relation:string,
     gender:string,
     description:string,
     dob:string,
@@ -16,7 +16,7 @@ interface INode extends Document{
     }
 }
 
-const NodeSchema = new Schema({
+const NodeSchema = new Schema<INode>({
     name: { 
         type: String, 
         required: true 
@@ -35,7 +35,7 @@ const NodeSchema = new Schema({
         required: true
     },
     dob: { 
-        type: Date, 
+        type: String, 
         required: true 
     },
     images: [{type: String }
@@ -60,4 +60,6 @@ const NodeSchema = new Schema({
     }
 });
 
-export default mongoose.model('node', NodeSchema);
+const Tree = mongoose.model<INode>("Node", NodeSchema);
+export default Node;
+export { INode };
