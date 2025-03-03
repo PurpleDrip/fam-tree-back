@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 
+import { info, success } from "./utils/logger";
+
 dotenv.config();
 
 const app = express();
@@ -28,5 +30,6 @@ app.use((err:any, req: Request, res:Response, next:NextFunction) => {
   });
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    success(`\n✅ Server is running on port ${PORT}`);
+    info(`RestAPI running at http://localhost:${PORT}\n`)
 });
