@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import Tree, { ITree } from "../models/treeModel";
+import { ITree } from "../models/treeModel";
 import redis from "../config/redis";
-import { getNodeByID } from "./nodeService";
 import { INode } from "../models/nodeModel";
 import User, { IUser } from "../models/userModel";
+import { updateCache } from "./redisService";
 
 export interface TreeData {
     treeName: string;
@@ -26,30 +26,10 @@ export const getTreeByID = async (id: string): Promise<TreeData | null> => {
         }
 
         console.log("Cache Miss! Fetching from DB...");
-        const oTree = await Tree.findById(id);
-        if (!oTree) {
-            console.warn(`Tree not found for ID: ${id}`);
-            return null;
-        }
-
-        // Fetch all nodes in parallel using Promise.all
-        const nodePromises = oTree.nodes.map((nodeId) => getNodeByID(nodeId.toString()));
-        const nodes = await Promise.all(nodePromises);
-
-        // Filter out any null/undefined nodes
-        const validNodes = nodes.filter((node) => node !== null) as INode[];
-
-        // Construct tree object
-        const tree: TreeData = {
-            treeName: oTree.name,
-            nodes: validNodes,
-            edges: oTree.edges,
-        };
-
-        // Store in Redis cache
-        await redis.setex(`session:tree:${id}`, 7 * 24 * 60 * 60, JSON.stringify(tree));
+        const tree=updateCache(id);
 
         return tree;
+        
     } catch (error) {
         console.error("Error retrieving tree:", error);
         return null;

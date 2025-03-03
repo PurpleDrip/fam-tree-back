@@ -9,6 +9,7 @@ import { alert, info, success } from "./utils/logger";
 import connectDB from "./config/db";
 import authRoute from "./routes/authRoute"
 import treeRoute from "./routes/treeRoute"
+import nodeRoute from "./routes/nodeRoute"
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,7 +28,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/auth",authRoute);
-app.use("/api",treeRoute)
+app.use("/api",treeRoute);
+app.use("/api",nodeRoute);
 
 app.use((err:any, req: Request, res:Response, next:NextFunction) => {
     console.error("Global Error Handler:", err);

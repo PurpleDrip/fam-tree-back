@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { addTree, getTreeByID, TreeData } from "../services/treeService";
 import mongoose from "mongoose";
 import Tree from "../models/treeModel";
-import redis from "../config/redis";
+import { updateCache } from "../services/redisService";
 
 export const getTree=async (req:Request,res:Response) : Promise <void> =>{
 
@@ -85,7 +85,7 @@ export const createTree=async(req:Request,res:Response): Promise<void> =>{
             return;
         }
 
-        const tree= await getTreeByID(newTree.id);
+        const tree= await updateCache(newTree.id);
 
         await newTree.save();
 
