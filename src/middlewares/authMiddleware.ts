@@ -8,25 +8,9 @@ import { ITree } from "../models/treeModel";
 import { INode } from "../models/nodeModel";
 
 export const CheckForCookies = async (req: Request, res: Response): Promise<void> => {
-    const TOKEN_NAME = process.env.TOKEN_NAME as string;
-    const token = req.body[TOKEN_NAME] || req.cookies[TOKEN_NAME];
 
-    if (!token) {
-        res.status(401).json({ message: "No tokens were found.", success: false });
-        return;
-    }
-
-    let id: string;
-    let treeId: string;
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: string, treeId: string };
-        id = decoded.userId;
-        treeId = decoded.treeId;
-    } catch (err) {
-        res.status(401).json({ message: "Invalid token", error: (err as Error).message });
-        return;
-    }
+    const id=res.locals.cookieData.id;
+    const treeId=localStorage.cookieData.treeId;
 
     try {
         let data = await redis.get(`session:tree:${treeId}`);
@@ -67,7 +51,7 @@ export const CheckForCookies = async (req: Request, res: Response): Promise<void
         const newToken = jwt.sign({ userId: id, treeId }, process.env.JWT_SECRET as string, { expiresIn: "7d" });
 
         // Set Cookie
-        res.cookie(TOKEN_NAME, newToken, {
+        res.cookie(process.env.TOKEN_NAME as string, newToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
