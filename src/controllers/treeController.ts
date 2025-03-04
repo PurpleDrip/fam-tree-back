@@ -56,6 +56,29 @@ export const getTreeById=async (req:Request,res:Response) : Promise <void> =>{
     }
 }
 
+export const getTreeByName=async (req:Request,res:Response) : Promise <void> =>{
+
+    const {treeName}=req.params;
+
+    let tree:TreeData|null;
+
+    try{
+        tree=await Tree.findOne({name:treeName});
+
+        if(!tree){
+            res.status(400).json({success:false,message:"No tree found with this Name"});
+            return;
+        }
+
+        res.status(200).json({success:true,data:tree})
+        return;
+
+    }catch(e){
+        res.status(500).json({success:false,message:"Error fetching tree"})
+        return;
+    }
+}
+
 export const createTree=async(req:Request,res:Response,next:NextFunction): Promise<void> =>{
 
     const id=res.locals.cookieData.id;
