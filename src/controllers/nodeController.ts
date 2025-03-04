@@ -6,8 +6,7 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
     console.log("Received Files:", req.files); 
     console.log("Received Body:", req.body);
 
-    const id=res.locals.cookieData.id;
-    const treeId=res.locals.cookieData.treeId;
+    const {id,treeId}=res.locals.cookieData;
 
     try{
         const { name, relation, gender, description, dob, role, position } = req.body;
@@ -36,7 +35,6 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
 
         await Tree.findByIdAndUpdate(treeId, { $push: { nodes: newNode._id } });
 
-        res.locals.cacheData.treeId=treeId;
         return next();
     }catch(error){
         console.error("Error creating node:", error);

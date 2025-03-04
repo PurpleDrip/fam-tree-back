@@ -19,10 +19,10 @@ export const getTreeByID = async (id: string): Promise<TreeData | null> => {
         }
 
         // Check Redis cache first
-        const cachedData = await redis.get(`session:tree:${id}`);
+        const cachedData = await redis.get(`session:tree:${id}`) as TreeData;
         if (cachedData) {
             console.log("Cache Hit!");
-            return JSON.parse(cachedData as string);
+            return cachedData;
         }
 
         console.log("Cache Miss! Fetching from DB...");

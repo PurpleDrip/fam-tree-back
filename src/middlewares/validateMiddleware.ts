@@ -20,13 +20,15 @@ export const validateUser=(req:Request,res:Response,next:NextFunction):void=>{
         id = decoded.userId;
         treeId = decoded.treeId;
 
-        if (![id, treeId].every(mongoose.Types.ObjectId.isValid)) {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
             res.status(400).json({ message: "Invalid Object Id" });
             return;
         }        
 
-        res.locals.cookieData.id=id;
-        res.locals.cookieData.treeId=treeId;
+        res.locals.cookieData={
+            id,
+            treeId
+        };
 
         return next();
     } catch (err) {

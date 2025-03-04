@@ -108,6 +108,8 @@ export const createTree=async(req:Request,res:Response,next:NextFunction): Promi
         }
 
         await newTree.save();
+
+        res.locals.cookieData.treeId=newTree.id;
         return next();
     }catch (error) {
         console.error("Error creating tree:", error);

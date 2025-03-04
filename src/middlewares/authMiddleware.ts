@@ -9,11 +9,17 @@ import { INode } from "../models/nodeModel";
 
 export const CheckForCookies = async (req: Request, res: Response): Promise<void> => {
 
-    const id=res.locals.cookieData.id;
-    const treeId=localStorage.cookieData.treeId;
+    const {id,treeId}=res.locals.cookieData;
 
+    let data={}as {
+        treeName:string,
+        nodes:Array<INode>,
+        edges:ITree["edges"],
+    } | null;
+
+    if(treeId){
     try {
-        let data = await redis.get(`session:tree:${treeId}`);
+        data = await redis.get(`session:tree:${treeId}`);
 
         if (!data) { // Cache Miss
             info("\nCache Miss! Fetching from DB...\n");
@@ -46,6 +52,12 @@ export const CheckForCookies = async (req: Request, res: Response): Promise<void
             info("\nCache Hit! Refreshing TTL...\n");
             await redis.setex(`session:tree:${treeId}`, 7 * 24 * 60 * 60, JSON.stringify(data)); // Reset TTL
         }
+    }catch(err){
+        res.status(500).json({ message: "Server error", error: (err as Error).message });
+    }
+    }
+    
+    try{
 
         // Renew JWT with both userId and treeId
         const newToken = jwt.sign({ userId: id, treeId }, process.env.JWT_SECRET as string, { expiresIn: "7d" });

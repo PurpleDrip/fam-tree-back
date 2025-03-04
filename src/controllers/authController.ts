@@ -19,7 +19,7 @@ export const registerUser=async (req:Request,res:Response,next:NextFunction):Pro
         edges: ITree['edges'];
     } = { 
         id: "", 
-        treeId: treeId || "", 
+        treeId: treeId || null, 
         treeName: "", 
         nodes: [], 
         edges: [] 
@@ -91,7 +91,7 @@ export const loginUser=async (req:Request,res:Response,next:NextFunction):Promis
                 edges: ITree['edges'] 
             }= {
                 id: user._id.toString(),
-                treeId: user.treeId.toString(),
+                treeId: user.treeId?.toString(),
                 treeName: user.treeName,
                 nodes: [],
                 edges: [],
