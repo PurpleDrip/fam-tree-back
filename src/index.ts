@@ -27,7 +27,7 @@ app.get("/", (req, res) => {
     res.send("Official RestAPI for famtree.in");
 });
 
-app.use("/auth",authRoute);
+app.use("/api/auth",authRoute);
 app.use("/api",treeRoute);
 app.use("/api",nodeRoute);
 
