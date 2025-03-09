@@ -3,9 +3,6 @@ import Tree from "../models/treeModel";
 import Node, { INode } from "../models/nodeModel";
 
 export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
-    console.log("Received Files:", req.files); 
-    console.log("Received Body:", req.body);
-
     const {id,treeId}=res.locals.cookieData;
 
     try{
@@ -27,13 +24,28 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
             description,
             dob,
             images, 
-            mainImg:images[0],
+            mainImg:images[0] || "",
             role,
             treeId,
-            position
+            position:JSON.parse(position)
         });
 
-        await Tree.findByIdAndUpdate(treeId, { $push: { nodes: newNode._id } });
+        await newNode.save();
+
+        try{
+            const newTree=await Tree.findByIdAndUpdate(treeId, { $push: { nodes: newNode._id } },{
+                runValidators:true,
+                new:true,
+            });
+
+            if(!newTree){
+                res.status(400).json({success:false,message:"No tree with this ID found"})
+                return 
+            }
+        }catch(e){
+            res.status(400).json({success:false,message:"Error finding id and updating"})
+            return
+        }
 
         return next();
     }catch(error){
@@ -63,6 +75,24 @@ export const updatePosition=async(req:Request,res:Response,next:NextFunction):Pr
         return next();
     }catch(e){
         res.status(500).json({success:false,message:"Error updating position"});
+        return;
+    }
+}
+
+export const getImagesForID=async(req:Request,res:Response)=>{
+    const {id}=req.params;
+
+    try{
+        const node=await Node.findById(id);
+
+        if(!node){
+            res.status(400).json({message:"No node found ",success:false});
+            return;
+        }
+        res.status(200).json({data:node.images,success:true,mainImg:node.mainImg});
+        return
+    }catch(err){
+        res.status(400).json({message:"Server error",success:false});
         return;
     }
 }

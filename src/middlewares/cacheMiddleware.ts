@@ -41,7 +41,7 @@ export const UpdateCache=async (req:Request,res:Response,next:NextFunction):Prom
         // Store in Redis cache
     await redis.setex(`session:tree:${id}`, 7 * 24 * 60 * 60, JSON.stringify(tree));
 
-    res.locals.tree=tree;
+    res.status(201).json({success:true,message:"Updated cache successfully",data:tree})
 
     return next();
 }

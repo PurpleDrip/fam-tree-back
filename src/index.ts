@@ -29,7 +29,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth",authRoute);
 app.use("/api",treeRoute);
-app.use("/api",nodeRoute);
+app.use("/api/node",nodeRoute);
 
 app.use((err:any, req: Request, res:Response, next:NextFunction) => {
     console.error("Global Error Handler:", err);

@@ -3,6 +3,8 @@ import { NextFunction, Request, Response } from "express";
 import { addTree, getTreeByID, TreeData } from "../services/treeService";
 import mongoose from "mongoose";
 import Tree, { IEdge } from "../models/treeModel";
+import { getNodeByID } from "../services/nodeService";
+import { INode } from "../models/nodeModel";
 
 export const getTree=async (req:Request,res:Response) : Promise <void> =>{
 
@@ -57,18 +59,28 @@ export const getTreeById=async (req:Request,res:Response) : Promise <void> =>{
 }
 
 export const getTreeByName=async (req:Request,res:Response) : Promise <void> =>{
-
     const {treeName}=req.params;
 
-    let tree:TreeData|null;
-
     try{
-        tree=await Tree.findOne({name:treeName});
+        const dbTree = await Tree.findOne({name:treeName});
 
-        if(!tree){
+        if(!dbTree){
             res.status(400).json({success:false,message:"No tree found with this Name"});
             return;
         }
+
+        const nodePromises = dbTree.nodes.map((nodeId) => getNodeByID(nodeId.toString()));
+        const nodes = await Promise.all(nodePromises);
+    
+        // Filter out any null/undefined nodes
+        const validNodes = nodes.filter((node) => node !== null) as INode[];
+    
+        // Construct tree object
+        const tree: TreeData = {
+            treeName: dbTree.name,
+            nodes: validNodes,
+            edges: dbTree.edges,
+        };
 
         res.status(200).json({success:true,data:tree})
         return;
