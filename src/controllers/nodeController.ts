@@ -102,13 +102,12 @@ export const deleteNode = async (req: Request, res: Response, next: NextFunction
     const { id } = req.body;
     const treeId = res.locals.cookieData.treeId;
 
-    if (!Types.ObjectId.isValid(id)) {
-        res.status(400).json({ message: "Invalid node ID", success: false });
-        return;
-    }
-
     try {
-        await Node.findByIdAndDelete(id);
+        const node=await Node.findByIdAndDelete(id,{runValidators:true,new:true});
+        if(!node){
+            res.status(400).json({message:"No node found with this ID",success:false})
+            return;
+        }
     } catch (err) {
         res.status(400).json({ message: "Error deleting node", success: false });
         return;
