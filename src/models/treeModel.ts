@@ -8,6 +8,7 @@ interface ITree extends Document {
 }
 
 export interface IEdge {
+    id:string,
     source:Types.ObjectId,
     target:Types.ObjectId
 }

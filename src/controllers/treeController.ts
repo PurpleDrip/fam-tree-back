@@ -4,7 +4,7 @@ import { addTree, getTreeByID, TreeData } from "../services/treeService";
 import mongoose from "mongoose";
 import Tree, { IEdge } from "../models/treeModel";
 import { getNodeByID } from "../services/nodeService";
-import { INode } from "../models/nodeModel";
+import Node, { INode } from "../models/nodeModel";
 
 export const getTree=async (req:Request,res:Response) : Promise <void> =>{
 
@@ -176,4 +176,52 @@ export const updateEdge=async(req:Request,res:Response,next:NextFunction):Promis
         res.status(500).json({success:false,message:"Error updating edge"});
         return;
     }
+}
+
+export const updateTree=async(req:Request,res:Response,next:NextFunction): Promise<void> =>{
+    const {nodes,edges}=req.body;
+    const treeId=res.locals.cookieData.treeId;
+
+    let newNodes=[];
+    let tree;
+
+    try{
+        for (const node of nodes){
+            const atomNode=await Node.findByIdAndUpdate(node.id,{
+                position:{
+                    x:node.position.x,
+                    y:node.position.y,
+                }},
+                {
+                    runValidators:true,
+                    new:true,
+                }
+            )
+
+            newNodes.push(atomNode);
+        }
+    }catch(err){
+        res.status(400).json({message:"Error updating node",success:"false"});
+        return;
+    }
+
+    try{
+        tree=await Tree.findByIdAndUpdate(treeId,{
+            edges
+        },{
+            runValidators:true,
+            new:true,
+        })
+    }catch(err){
+        res.status(400).json({message:"Error updating edges",success:"false"});
+        return ;
+    }
+
+    res.status(200).json({data:{
+        nodes:newNodes,
+        edges:tree?.edges
+    }})
+
+    return;
+
 }
