@@ -27,6 +27,7 @@ const TreeSchema = new Schema<ITree>({
         ref: "Node"
     }],
     edges: [{
+        id: {type:String, required:true},
         source: { type: Schema.Types.ObjectId, ref: "Node" },
         target: { type: Schema.Types.ObjectId, ref: "Node" }
     }]
