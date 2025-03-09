@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import Tree from "../models/treeModel";
 import Node, { INode } from "../models/nodeModel";
+import { Types } from "mongoose";
 
 export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
     const {id,treeId}=res.locals.cookieData;
@@ -96,3 +97,34 @@ export const getImagesForID=async(req:Request,res:Response)=>{
         return;
     }
 }
+
+export const deleteNode = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { id } = req.body;
+    const treeId = res.locals.cookieData.treeId;
+
+    if (!Types.ObjectId.isValid(id)) {
+        res.status(400).json({ message: "Invalid node ID", success: false });
+        return;
+    }
+
+    try {
+        await Node.findByIdAndDelete(id);
+    } catch (err) {
+        res.status(400).json({ message: "Error deleting node", success: false });
+        return;
+    }
+
+    try {
+        await Tree.findByIdAndUpdate(treeId, {
+            $pull: { edges: { $or: [{ source: new Types.ObjectId(id) }, { target: new Types.ObjectId(id) }] } }
+        }, {
+            runValidators: true,
+            new: true
+        });
+    } catch (err) {
+        res.status(400).json({ message: "Error removing edges from tree", success: false });
+        return;
+    }
+
+    next();
+};
