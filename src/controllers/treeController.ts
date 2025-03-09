@@ -217,11 +217,6 @@ export const updateTree=async(req:Request,res:Response,next:NextFunction): Promi
         return ;
     }
 
-    res.status(200).json({data:{
-        nodes:newNodes,
-        edges:tree?.edges
-    }})
-
-    return;
+    next();
 
 }
