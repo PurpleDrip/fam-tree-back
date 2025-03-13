@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 
 import { getTreeByID } from "../services/treeService";
 import redis from "../config/redis";
-import { info } from "../utils/logger";
 import { ITree } from "../models/treeModel";
 import { INode } from "../models/nodeModel";
 
@@ -22,7 +21,7 @@ export const CheckForCookies = async (req: Request, res: Response): Promise<void
         data = await redis.get(`session:tree:${treeId}`);
 
         if (!data) { // Cache Miss
-            info("\nCache Miss! Fetching from DB...\n");
+            console.log("\nCache Miss! Fetching from DB...\n");
 
             let nodes :Array<INode> = [];
             let edges :ITree['edges']= [];
@@ -49,7 +48,7 @@ export const CheckForCookies = async (req: Request, res: Response): Promise<void
             // Store in Redis
             await redis.setex(`session:tree:${treeId}`, 7 * 24 * 60 * 60, JSON.stringify(data));
         } else {
-            info("\nCache Hit! Refreshing TTL...\n");
+            console.log("\nCache Hit! Refreshing TTL...\n");
             await redis.setex(`session:tree:${treeId}`, 7 * 24 * 60 * 60, JSON.stringify(data)); // Reset TTL
         }
     }catch(err){
