@@ -1,6 +1,8 @@
 import cloudinary from "cloudinary";
+import { Request, Response } from "express";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { getTreeName } from "../services/treeService";
 
 
 cloudinary.v2.config({
@@ -12,10 +14,20 @@ cloudinary.v2.config({
 // Configure Storage
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary.v2,
-  params: {
-    folder: "fam-tree",
-    allowedFormats: ["jpg", "png", "jpeg", "webp"],
-  } as any
+  params: async (req: Request, res: Response, file: Express.Multer.File) => {
+    const { treeId } = res.locals.cookieData; 
+    if (!treeId) throw new Error("Family Tree ID is required");
+
+    const treeName = await getTreeName(treeId);
+
+    if (!treeName) throw new Error("No Family Name found");
+
+    return {
+      folder: `fam-tree/${treeName}`, 
+      allowedFormats: ["jpg", "png", "jpeg", "webp"],
+      public_id: file.originalname.split(".")[0], 
+    };
+  },
 });
 
 const upload = multer({ storage });
