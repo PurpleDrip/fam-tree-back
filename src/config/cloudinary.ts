@@ -16,11 +16,15 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary.v2,
   params: async (req: Request, res: Response, file: Express.Multer.File) => {
     const { treeId } = res.locals.cookieData; 
-    if (!treeId) throw new Error("Family Tree ID is required");
+    if (!treeId) return res.status(400).json({message:"No tree ID found",success:false})
 
     const treeName = await getTreeName(treeId);
 
-    if (!treeName) throw new Error("No Family Name found");
+    if (!treeName) return res.status(400).json({message:"No tree name found for this ID",success:false});
+
+    if(Array.isArray(req.files) && req.files.length > 10){
+      return res.status(400).json({message:"Can upload a maximum of 10 images per request.",success:false});
+    }
 
     return {
       folder: `fam-tree/${treeName}`, 

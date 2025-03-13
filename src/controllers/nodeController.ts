@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { v4 as uuid } from "uuid";
+import cloudinary from "cloudinary";
 import Tree from "../models/treeModel";
 import Node, { INode } from "../models/nodeModel";
 import { Types } from "mongoose";
@@ -18,7 +18,7 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
         }
 
         const images = Array.isArray(req.files) ? req.files.map(file => ({
-            id: uuid(),
+            _id: file.filename,
             url: file.path,
         })) : [];
 
@@ -29,7 +29,7 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
             description,
             dob,
             images, 
-            mainImg:images[0].url || "",
+            mainImg:images.length > 0 ? images[0].url : "",
             role,
             treeId,
             position:JSON.parse(position)
@@ -107,10 +107,15 @@ export const deleteNode = async (req: Request, res: Response, next: NextFunction
     const treeId = res.locals.cookieData.treeId;
 
     try {
-        const node=await Node.findByIdAndDelete(id,{runValidators:true,new:true});
-        if(!node){
-            res.status(400).json({message:"No node found with this ID",success:false})
+        const node = await Node.findByIdAndDelete(id, { runValidators: true, new: true });
+        if (!node) {
+            res.status(400).json({ message: "No node found with this ID", success: false });
             return;
+        }
+
+        for (const img of node.images) {
+            console.log(img);
+            await cloudinary.v2.uploader.destroy(img._id);
         }
     } catch (err) {
         res.status(400).json({ message: "Error deleting node", success: false });

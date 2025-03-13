@@ -1,12 +1,17 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
+export interface IImage{
+    _id:string;
+    url: string;
+}
+
 interface INode extends Document{
     name:string,
     relation:string,
     gender:string,
     description:string,
     dob:string,
-    images:Array<string>,
+    images: Array<IImage>,
     mainImg:string,
     role:string,
     treeId:Types.ObjectId,
