@@ -5,7 +5,6 @@ import express,{ Request, Response, NextFunction }  from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
-import { alert, info, success } from "./utils/logger";
 import connectDB from "./config/db";
 import authRoute from "./routes/authRoute"
 import treeRoute from "./routes/treeRoute"
@@ -39,10 +38,10 @@ app.use((err:any, req: Request, res:Response, next:NextFunction) => {
 
 connectDB().then(() => {
     app.listen(PORT, () => {
-        success(`✅ Server is running on port ${PORT}`);
-        info(`RestAPI running at "http://localhost:${PORT}"\n`)
+        console.log(`✅ Server is running on port ${PORT}`);
+        console.log(`RestAPI running at "http://localhost:${PORT}"\n`)
     });
 }).catch(err => {
-    alert("❌ Server startup failed due to DB connection issue:"+ err);
+    console.log("❌ Server startup failed due to DB connection issue:"+ err);
     process.exit(1);
 });
