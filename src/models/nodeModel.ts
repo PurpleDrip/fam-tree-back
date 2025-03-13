@@ -38,7 +38,10 @@ const NodeSchema = new Schema<INode>({
         type: String, 
         required: true 
     },
-    images: [{type: String }
+    images: [{
+        id:String,
+        url:String
+     }
     ],
     mainImg:{
         type:String,
