@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { v4 as uuid } from "uuid";
 import Tree from "../models/treeModel";
 import Node, { INode } from "../models/nodeModel";
 import { Types } from "mongoose";
@@ -16,7 +17,10 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
             return;
         }
 
-        const images = Array.isArray(req.files) ? req.files.map(file => file.path) : [];
+        const images = Array.isArray(req.files) ? req.files.map(file => ({
+            id: uuid(),
+            url: file.path,
+        })) : [];
 
         const newNode = new Node({
             name,
@@ -25,7 +29,7 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
             description,
             dob,
             images, 
-            mainImg:images[0] || "",
+            mainImg:images[0].url || "",
             role,
             treeId,
             position:JSON.parse(position)

@@ -4,13 +4,12 @@ dotenv.config();
 import express,{ Request, Response, NextFunction }  from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { inject } from "@vercel/analytics";
 
-import { alert, info, success } from "../utils/logger";
-import connectDB from "../config/db";
-import authRoute from "../routes/authRoute"
-import treeRoute from "../routes/treeRoute"
-import nodeRoute from "../routes/nodeRoute"
+import { alert, info, success } from "./utils/logger";
+import connectDB from "./config/db";
+import authRoute from "./routes/authRoute"
+import treeRoute from "./routes/treeRoute"
+import nodeRoute from "./routes/nodeRoute"
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,11 +22,6 @@ app.use(cors({
     origin: FRONTEND_URL, 
     credentials: true, 
   }));
-
-app.use((req, res, next) => {
-      inject();
-      next();
-});
 
 app.get("/", (req, res) => {
     res.send("Official RestAPI for famtree.in");
