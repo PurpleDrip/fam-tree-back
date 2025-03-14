@@ -62,14 +62,6 @@ export const validateCookie=(req:Request,res:Response,next:NextFunction):void=>{
     }
 }
 
-export const validateFiles=(req:Request,res:Response,next:NextFunction) :void=>{
-    if(Array.isArray(req.files) && req.files.length > 10){
-        res.status(400).json({message:"Can upload a maximum of 10 images per request.",success:false});
-        return 
-    }
-    next();
-}
-
 export const validateNode=async (req:Request,res:Response,next:NextFunction) : Promise<void> =>{
     const {override,name}=req.body;
 
