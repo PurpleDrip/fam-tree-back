@@ -71,18 +71,18 @@ export const validateFiles=(req:Request,res:Response,next:NextFunction) :void=>{
 }
 
 export const validateNode=async (req:Request,res:Response,next:NextFunction) : Promise<void> =>{
-    const {override}=req.body;
+    const {override,name}=req.body;
 
     if(!override){
         try{
-            const node=await Node.find({name})
+            const node=await Node.findOne({name})
 
             if(node){
                 res.status(400).json({success:false,message:"A node with this name already exists."});
                 return
             }
         }catch(err){
-            res.status(500).json({ success: false, message: "Error creating node" });
+            res.status(500).json({ success: false, message: "Error validating node" });
             return;
         }
     }
