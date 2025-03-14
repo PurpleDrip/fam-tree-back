@@ -144,3 +144,27 @@ export const deleteNode = async (req: Request, res: Response, next: NextFunction
 
     next();
 };
+
+
+export const addImages=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
+    if (!req.files || !Array.isArray(req.files)) {
+        res.status(400).json({ message: "No images uploaded", success: false });
+        return 
+    }
+
+    const images = Array.isArray(req.files) ? req.files.map(file => ({
+        _id: file.filename,
+        url: file.path,
+    })) : [];
+
+    try{
+        await Node.findByIdAndUpdate(req.body.nodeId,
+            { $push: { images: { $each: images } } },
+            { new: true, runValidators: true }
+        )
+    }catch(err){
+        res.status(500).json({"message":"Error uploading images to node",success:false})
+        return;
+    }
+    next();
+}

@@ -44,8 +44,8 @@ const NodeSchema = new Schema<INode>({
         required: true 
     },
     images: [{
-        _id:String,
-        url:String
+        _id:{ type: String, required: true },
+        url:{ type: String, required: true }
      }
     ],
     mainImg:{

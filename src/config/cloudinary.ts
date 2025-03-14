@@ -1,5 +1,5 @@
 import cloudinary from "cloudinary";
-import { Request, Response } from "express";
+import { Request} from "express";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { v4 as uuidv4 } from 'uuid';
