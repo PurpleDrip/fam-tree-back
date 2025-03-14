@@ -71,7 +71,7 @@ export const validateFiles=(req:Request,res:Response,next:NextFunction) :void=>{
 }
 
 export const validateNode=async (req:Request,res:Response,next:NextFunction) : Promise<void> =>{
-    const {override}=req.body;
+    const {override,name}=req.body;
 
     if(!override){
         try{
