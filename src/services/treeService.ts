@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { ITree } from "../models/treeModel";
+import Tree, { ITree } from "../models/treeModel";
 import redis from "../config/redis";
 import { INode } from "../models/nodeModel";
 import User, { IUser } from "../models/userModel";
@@ -41,6 +41,19 @@ export const addTree = async (userId:string, treeId:string, treeName:string):Pro
         const user=await User.findByIdAndUpdate(userId, { treeId, treeName }, { new: true, runValidators: true });
         return user
     } catch (error) {
+        return null;
+    }
+}
+
+export const getTreeName=async (treeId :string): Promise<null|string> =>{
+    if(!treeId) return null;
+
+    try{
+    const tree=await Tree.findById(treeId,{name:1});
+    const treeName = tree ? tree.name : null;
+
+    return treeName;
+    }catch(err){
         return null;
     }
 }

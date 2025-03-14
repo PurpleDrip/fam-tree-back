@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
-    origin: FRONTEND_URL, 
+    origin:process.env.Production? FRONTEND_URL : "http://localhost:3000", 
     credentials: true, 
   }));
 
@@ -39,7 +39,6 @@ app.use((err:any, req: Request, res:Response, next:NextFunction) => {
 connectDB().then(() => {
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`✅ Server is running on port ${PORT}`);
-        console.log(`RestAPI running at "http://localhost:${PORT}"\n`)
     });
 }).catch(err => {
     console.log("❌ Server startup failed due to DB connection issue:"+ err);

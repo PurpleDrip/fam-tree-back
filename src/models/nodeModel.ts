@@ -1,12 +1,17 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
+export interface IImage{
+    _id:string;
+    url: string;
+}
+
 interface INode extends Document{
     name:string,
     relation:string,
     gender:string,
     description:string,
     dob:string,
-    images:Array<string>,
+    images: Array<IImage>,
     mainImg:string,
     role:string,
     treeId:Types.ObjectId,
@@ -39,7 +44,8 @@ const NodeSchema = new Schema<INode>({
         required: true 
     },
     images: [{
-        url:String
+        _id:{ type: String, required: true },
+        url:{ type: String, required: true }
      }
     ],
     mainImg:{

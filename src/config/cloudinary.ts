@@ -1,6 +1,8 @@
 import cloudinary from "cloudinary";
+import { Request} from "express";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { v4 as uuidv4 } from 'uuid';
 
 
 cloudinary.v2.config({
@@ -9,13 +11,16 @@ cloudinary.v2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configure Storage
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary.v2,
-  params: {
-    folder: "fam-tree",
-    allowedFormats: ["jpg", "png", "jpeg", "webp"],
-  } as any
+  params: async (req: Request) => {
+    const {treeName} = req.body || "default_tree";
+    return {
+      folder: `fam-tree/${treeName}`, 
+      allowedFormats: ["jpg", "png", "jpeg", "webp"],
+      public_id: uuidv4(), 
+    };
+  },
 });
 
 const upload = multer({ storage });

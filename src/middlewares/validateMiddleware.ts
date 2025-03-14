@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
+import Node from "../models/nodeModel";
 
 const TOKEN_NAME = process.env.TOKEN_NAME as string;
 
@@ -59,4 +60,24 @@ export const validateCookie=(req:Request,res:Response,next:NextFunction):void=>{
         res.status(401).json({ message: "Invalid token", error: (err as Error).message });
         return;
     }
+}
+
+export const validateNode=async (req:Request,res:Response,next:NextFunction) : Promise<void> =>{
+    const {override,name}=req.body;
+
+    if(!override){
+        try{
+            const node=await Node.findOne({name})
+
+            if(node){
+                res.status(400).json({success:false,message:"A node with this name already exists."});
+                return
+            }
+        }catch(err){
+            console.log(err)
+            res.status(500).json({ success: false, message: "Error validating node" });
+            return;
+        }
+    }
+    next();
 }
