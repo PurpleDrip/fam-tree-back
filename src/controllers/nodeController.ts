@@ -8,13 +8,27 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
     const {id,treeId}=res.locals.cookieData;
 
     try{
-        const { name, relation, gender, description, dob, role, position } = req.body;
+        const { name, relation, gender, description, dob, role, position ,override} = req.body;
         
         const treeExists = await Tree.findById(treeId);
 
         if (!treeExists) {
             res.status(404).json({ success: false, message: "Tree not found" });
             return;
+        }
+
+        if(!override){
+            try{
+                const node=await Node.find({name})
+
+                if(node){
+                    res.status(400).json({success:false,message:"A node with this name already exists."});
+                    return
+                }
+            }catch(err){
+                res.status(500).json({ success: false, message: "Error creating node" });
+                return;
+            }
         }
 
         const images = Array.isArray(req.files) ? req.files.map(file => ({
@@ -54,7 +68,6 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
 
         return next();
     }catch(error){
-        console.error("Error creating node:", error);
         res.status(500).json({ success: false, message: "Error creating node" });
         return;
     }
