@@ -54,6 +54,7 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
 
         return next();
     }catch(error){
+        console.log(error)
         res.status(500).json({ success: false, message: "Error creating node" });
         return;
     }
@@ -113,12 +114,20 @@ export const deleteNode = async (req: Request, res: Response, next: NextFunction
         }
 
         for (const img of node.images) {
-            console.log(img);
             await cloudinary.v2.uploader.destroy(img._id);
         }
     } catch (err) {
         res.status(400).json({ message: "Error deleting node", success: false });
         return;
+    }
+
+    try{
+        await Tree.findByIdAndUpdate(treeId,{
+            $pull:{nodes:new Types.ObjectId(id)}
+        })
+    }catch(err){
+        res.status(400).json({ message: "Error deleting node from tree", success: false });
+        return ;
     }
 
     try {

@@ -2,7 +2,7 @@ import cloudinary from "cloudinary";
 import { Request, Response } from "express";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
-import { getTreeName } from "../services/treeService";
+import { v4 as uuidv4 } from 'uuid';
 
 
 cloudinary.v2.config({
@@ -11,21 +11,14 @@ cloudinary.v2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configure Storage
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary.v2,
-  params: async (req: Request, res: Response, file: Express.Multer.File) => {
-    const { treeId } = res.locals.cookieData; 
-    if (!treeId) return res.status(400).json({message:"No tree ID found",success:false})
-
-    const treeName = await getTreeName(treeId);
-
-    if (!treeName) return res.status(400).json({message:"No tree name found for this ID",success:false});
-
+  params: async (req: Request) => {
+    const {treeName} = req.body || "default_tree";
     return {
       folder: `fam-tree/${treeName}`, 
       allowedFormats: ["jpg", "png", "jpeg", "webp"],
-      public_id: file.originalname.split(".")[0], 
+      public_id: uuidv4(), 
     };
   },
 });
