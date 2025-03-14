@@ -22,10 +22,6 @@ const storage = new CloudinaryStorage({
 
     if (!treeName) return res.status(400).json({message:"No tree name found for this ID",success:false});
 
-    if(Array.isArray(req.files) && req.files.length > 10){
-      return res.status(400).json({message:"Can upload a maximum of 10 images per request.",success:false});
-    }
-
     return {
       folder: `fam-tree/${treeName}`, 
       allowedFormats: ["jpg", "png", "jpeg", "webp"],
