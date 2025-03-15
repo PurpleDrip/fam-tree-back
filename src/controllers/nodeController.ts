@@ -184,3 +184,21 @@ export const changeDP=async (req:Request,res:Response,next:NextFunction):Promise
         return;
     }
 }
+
+export const deleteImgById=async(req:Request,res:Response,next:NextFunction):Promise<void>=>{
+    const {nodeId,imgId}=req.body;
+
+    try{
+        await Node.findByIdAndUpdate(nodeId,
+            {$pull:{images:{_id:imgId}}}
+        )
+
+        await cloudinary.v2.uploader.destroy(imgId);
+        
+    }catch(err){
+        console.log(err)
+        res.status(500).json({message:"Error deleting image by ID", success:false});
+        return;
+    }
+    next();
+}
