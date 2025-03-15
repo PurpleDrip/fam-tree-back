@@ -168,3 +168,19 @@ export const addImages=async (req:Request,res:Response,next:NextFunction):Promis
     }
     next();
 }
+
+export const changeDP=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
+    const {nodeId,url}=req.body;
+
+    try{
+        await Node.findByIdAndUpdate(nodeId,
+            {mainImg:url},
+            {runValidators:true,new:true}
+        )
+
+        next();
+    }catch(err){
+        res.status(400).json({message:"Couldn't update DP for this nodeID"});
+        return;
+    }
+}
