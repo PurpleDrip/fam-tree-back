@@ -94,7 +94,7 @@ export const getImagesForID=async(req:Request,res:Response)=>{
             res.status(400).json({message:"No node found ",success:false});
             return;
         }
-        res.status(200).json({data:node.images,success:true,mainImg:node.mainImg});
+        res.status(200).json({data:node,success:true,});
         return
     }catch(err){
         res.status(400).json({message:"Server error",success:false});
