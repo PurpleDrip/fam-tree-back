@@ -4,13 +4,13 @@ import jwt from "jsonwebtoken"
 
 import User from "../models/userModel";
 import { getTreeByID } from "../services/treeService";
-import { ITree } from "../models/treeModel";
 import redis from "../config/redis";
-import { INode } from "../models/nodeModel";
+import { IRedisData } from "../services/redisService";
 
 export const registerUser=async (req:Request,res:Response,next:NextFunction):Promise<void>=>{
     const { username, gender, dob, password, treeId, mode } = req.body;
 
+    let tree:IRedisData|null=null;
     let treeName;
 
     try{
@@ -23,10 +23,10 @@ export const registerUser=async (req:Request,res:Response,next:NextFunction):Pro
         const hashedPassword = await bcrypt.hash(password, 10);
 
         if (treeId) {
-            const tree= await getTreeByID(treeId as string);
+            tree= await getTreeByID(treeId as string);
             if (!tree) {
                 res.status(400).json({ message: "Tree not found" });
-                return ;
+                return;
             }
             
             treeName=tree?.name;
@@ -47,7 +47,10 @@ export const registerUser=async (req:Request,res:Response,next:NextFunction):Pro
         res.locals.data.treeId=treeId||"";
         res.locals.data.userId=newUser.id;
         
-        return next(); 
+        next(); 
+
+        res.status(201).json({message:"Registered user successfully",success:true,data:{tree}});
+        return;
 
     } catch (error) {
         next(error);
@@ -57,6 +60,7 @@ export const registerUser=async (req:Request,res:Response,next:NextFunction):Pro
 export const loginUser=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
     try {
         const { username, password } = req.body;
+        let tree:IRedisData|null=null;
 
         const user = await User.findOne({ username });
         if (!user) {
@@ -70,35 +74,25 @@ export const loginUser=async (req:Request,res:Response,next:NextFunction):Promis
             return 
         }
 
-        let data:{id: string;
-                treeId: string;
-                treeName: string;
-                nodes: Array<INode>;
-                edges: ITree['edges'] 
-            }= {
-                id: user._id.toString(),
-                treeId: user.treeId?.toString(),
-                treeName: user.treeName,
-                nodes: [],
-                edges: [],
-            };
-
         if (user.treeId) {
             try {
-                const tree = await getTreeByID(user.treeId.toString());
+                tree = await getTreeByID(user.treeId.toString());
                 if (!tree) {
                     res.status(400).json({ message: "Tree not found" });
                     return 
                 }
-                data.nodes = tree.nodes || [];
-                data.edges = tree.edges || [];
+
+                res.locals.data.treeId=user.treeId;
+                res.locals.data.userId=user.id;
+
             } catch (error) {
                 res.status(500).json({ message: "Error fetching tree" });
                 return 
             }
         }
-        res.locals.data = data;
-        return next();
+        next();
+        res.status(200).json({message:"Login successfully",success:true,data:{tree}});
+        return ;
 
     } catch (error) {
         console.error("Error logging in:", error);

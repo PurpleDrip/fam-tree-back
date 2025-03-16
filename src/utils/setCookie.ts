@@ -17,7 +17,6 @@ export const setCookie = async (req:Request, res:Response) :Promise<void>=> {
             maxAge: 24 * 60 * 60 * 1000 ,
         });
 
-        res.status(201).json({ message: "Cookie set successfully", success: true, data: res.locals.data });
         return ;
     } catch (error: unknown) {
         const err = error as { message: string };

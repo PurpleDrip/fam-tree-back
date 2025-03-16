@@ -3,10 +3,10 @@ import mongoose from "mongoose";
 import Tree from "../models/treeModel";
 import redis from "../config/redis";
 import User, { IUser } from "../models/userModel";
-import { GenerteAndUpdateCache} from "./redisService";
+import { GenerteAndUpdateCache, IRedisData} from "./redisService";
 
 
-export const getTreeByID = async (treeId: string)=> {
+export const getTreeByID = async (treeId: string):Promise<null|IRedisData> => {
     try {
         if (!mongoose.Types.ObjectId.isValid(treeId)) {
             console.warn(`Invalid tree ID: ${treeId}`);
@@ -15,9 +15,13 @@ export const getTreeByID = async (treeId: string)=> {
 
         const cachedData = await redis.hgetall(`tree:${treeId}`);
         
-        if (cachedData) {
+        if (cachedData  && Object.keys(cachedData).length > 0) {
             console.log("Cache Hit!");
-            return cachedData;
+            return {
+                name: cachedData.name as string,
+                nodes: JSON.parse(cachedData.nodes as string),
+                edges: JSON.parse(cachedData.edges as string)
+              };
         }else{
         console.log("Cache Miss! Fetching from DB...");
         const tree=await GenerteAndUpdateCache(treeId);
