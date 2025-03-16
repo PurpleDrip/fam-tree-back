@@ -32,7 +32,6 @@ const TreeSchema = new Schema<ITree>({
     },
     owner:{
         type:String,
-        ref:"User",
         required:true,
     },
     type: {

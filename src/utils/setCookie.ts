@@ -1,16 +1,14 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-const TOKEN_NAME = process.env.TOKEN_NAME;
-
 export const setCookie = async (req:Request, res:Response) :Promise<void>=> {
     try {
-        const { userId,treeId } = res.locals.data;
+        const { treeName,treeId } = res.locals.data;
 
 
-        const token = jwt.sign({ userId,treeId }, process.env.JWT_SECRET as string, { expiresIn: "1d" });
+        const token = jwt.sign({ treeName,treeId}, process.env.JWT_SECRET as string, { expiresIn: "1d" });
 
-        res.cookie(TOKEN_NAME as string, token, {
+        res.cookie(process.env.TOKEN_NAME as string, token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
@@ -20,6 +18,7 @@ export const setCookie = async (req:Request, res:Response) :Promise<void>=> {
         return ;
     } catch (error: unknown) {
         const err = error as { message: string };
+        console.log(err);
         res.status(500).json({ message: "Error setting cookie", error: err.message });
         return ;
     }
