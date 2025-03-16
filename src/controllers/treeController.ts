@@ -1,17 +1,19 @@
 import { NextFunction, Request, Response } from "express";
-
-import { addTree, getTreeByID, TreeData } from "../services/treeService";
 import mongoose from "mongoose";
+
+import { addTreeToUser, getTreeByID } from "../services/treeService";
 import Tree, { IEdge } from "../models/treeModel";
 import { getNodeByID } from "../services/nodeService";
 import Node, { INode } from "../models/nodeModel";
+import { IRedisData } from "../services/redisService";
+import redis from "../config/redis";
 
 export const getTree=async (req:Request,res:Response) : Promise <void> =>{
 
-    const id=res.locals.cookieData.id;
+    const userId=res.locals.cookieData.userId;
     const treeId=res.locals.cookieData.treeId;
 
-    let tree:TreeData|null;
+    let tree:IRedisData|null;
 
     try{
         tree=await getTreeByID(treeId as string);
@@ -39,7 +41,7 @@ export const getTreeById=async (req:Request,res:Response) : Promise <void> =>{
         return;
     }
 
-    let tree:TreeData|null;
+    let tree:IRedisData|null;
 
     try{
         tree=await getTreeByID(id as string);
@@ -72,12 +74,11 @@ export const getTreeByName=async (req:Request,res:Response) : Promise <void> =>{
         const nodePromises = dbTree.nodes.map((nodeId) => getNodeByID(nodeId.toString()));
         const nodes = await Promise.all(nodePromises);
     
-        // Filter out any null/undefined nodes
         const validNodes = nodes.filter((node) => node !== null) as INode[];
     
         // Construct tree object
-        const tree: TreeData = {
-            treeName: dbTree.name,
+        const tree: IRedisData = {
+            name: dbTree.treeName,
             nodes: validNodes,
             edges: dbTree.edges,
         };
@@ -91,132 +92,70 @@ export const getTreeByName=async (req:Request,res:Response) : Promise <void> =>{
     }
 }
 
-export const createTree=async(req:Request,res:Response,next:NextFunction): Promise<void> =>{
-
-    const id=res.locals.cookieData.id;
-
-    const { treeName, type, nodes, edges } = req.body;
+export const updateTree=async(): Promise<void> =>{
+    const startTime = Date.now();
+    console.log("Searching for trees to update...");
 
     try{
-        const existingTree = await Tree.findOne({ name: treeName });
+        const updatedTrees=await redis.smembers('trees:modified');
 
-        if (existingTree) {
-            res.status(400).json({ success: false, message: "Tree with this name already exists." });
-            return;
+        const MAX_BATCH_SIZE = 40;
+        const treesToProcess = updatedTrees.slice(0, MAX_BATCH_SIZE);
+
+        if (treesToProcess.length === 0) {
+            console.log("No Trees available to update.")
+            return ;
         }
 
-        const newTree = new Tree({
-            name:treeName,
-            type: type || "custom",
-            nodes: nodes || [],
-            edges: edges || []
-        });
+        const results = [];
 
-        const user=await addTree(id,newTree.id,newTree.name);
+        for(const treeId of treesToProcess){
+            const session = await mongoose.startSession();
+            try{
+                session.startTransaction();
+                const redisTree=await redis.hgetall(`tree:${treeId}`);
 
-        if(!user){
-            res.status(500).json({success:false,message:"Error updating user db"});
-            return;
-        }
-
-        await newTree.save();
-
-        res.locals.cookieData.treeId=newTree.id;
-        return next();
-    }catch (error) {
-        console.error("Error creating tree:", error);
-        res.status(500).json({ success: false, message: "Error creating tree" });
-    }
-
-}
-
-export const addEdge=async(req:Request,res:Response,next:NextFunction): Promise<void> =>{
-    const treeId=res.locals.cookieData?.treeId;
-    const edge=req.body as IEdge;
-
-    try{
-        const tree=await Tree.findByIdAndUpdate(treeId,{
-            $push:{edges:edge}},{
-            new:true,
-            runValidators:true,
-        });
-
-        if(!tree){
-            res.status(400).json({success:false,message:"Tree not found"})
-            return
-        }
-
-        return next();
-    }catch(e){
-        res.status(500).json({success:false,message:"Error adding edge"});
-        return;
-    }
-}
-
-export const updateEdge=async(req:Request,res:Response,next:NextFunction):Promise<void> =>{
-    const treeId=res.locals.cookieData?.treeId;
-
-    const edges=req.body as Array<IEdge>;
-
-    try{
-        const tree=await Tree.findByIdAndUpdate(treeId,{
-            edges},{
-                new:true,
-                runValidators:true,
-            }
-        );
-
-        if(!tree){
-            res.status(400).json({success:false,message:"Tree not found"})
-            return
-        }
-
-        return next();
-    }catch(e){
-        res.status(500).json({success:false,message:"Error updating edge"});
-        return;
-    }
-}
-
-export const updateTree=async(req:Request,res:Response,next:NextFunction): Promise<void> =>{
-    const {nodes,edges}=req.body;
-    const treeId=res.locals.cookieData.treeId;
-
-    let newNodes=[];
-    let tree;
-
-    try{
-        for (const node of nodes){
-            const atomNode=await Node.findByIdAndUpdate(node.id,{
-                position:{
-                    x:node.position.x,
-                    y:node.position.y,
-                }},
-                {
-                    runValidators:true,
-                    new:true,
+                if (!redisTree || !redisTree.nodes || !redisTree.edges) {
+                    console.warn(`Incomplete data for tree ${treeId}`);
+                    continue;
                 }
-            )
 
-            newNodes.push(atomNode);
+                const nodes = JSON.parse(redisTree.nodes as string) as INode[];
+                const edges = JSON.parse(redisTree.edges as string) as IEdge[];
+
+                await Tree.findByIdAndUpdate(treeId,{
+                    edges,
+                },{session});
+
+                const nodeUpdatePromises = nodes.map(node => 
+                    Node.findByIdAndUpdate(node._id, {
+                        position: node.position,
+                    },{session})
+                );
+
+                await Promise.all(nodeUpdatePromises);
+                await session.commitTransaction();
+
+                await redis.srem('trees:modified', treeId);
+                results.push({ treeId, status: 'updated' });
+                console.log(`Tree ${treeId} synchronized with MongoDB`);
+            }catch(err){
+                console.error(`Error updating tree ${treeId}:`, err);
+                results.push({ treeId, status: 'failed', error: (err as Error).message });
+                await session.abortTransaction();
+            }finally{
+                session.endSession();
+            }
         }
+
+        console.log("Trees updated successfully!");
+        console.log("Updated: ",results.filter(r => r.status === 'updated').length);
+        console.log("Failed: ",results.filter(r => r.status === 'failed').length);
+        console.log("Details: ",results)
+        const duration = Date.now() - startTime;
+        console.log(`Sync completed in ${duration}ms, updated ${results.length} trees`);
     }catch(err){
-        res.status(400).json({message:"Error updating node",success:"false"});
-        return;
+        console.error("Error in updateTree:", err);
+
     }
-
-    try{
-        tree=await Tree.findByIdAndUpdate(treeId,{
-            edges
-        },{
-            runValidators:true,
-            new:true,
-        })
-    }catch(err){
-        res.status(400).json({message:"Error updating edges",success:"false"});
-        return ;
-    }
-
-    next();
-
 }

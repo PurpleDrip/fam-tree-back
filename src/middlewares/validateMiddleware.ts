@@ -14,25 +14,32 @@ export const validateUser=(req:Request,res:Response,next:NextFunction):void=>{
         return;
     }
 
-    let userId: string;
+    let treeName: string;
     let treeId: string;
+    let type:string;
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: string, treeId: string };
-        userId = decoded.userId;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { treeName: string, treeId: string,type:string };
+        treeName = decoded.treeName;
         treeId = decoded.treeId;
+        type=decoded.type;
 
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
+        if (!mongoose.Types.ObjectId.isValid(treeId)) {
             res.status(400).json({ message: "Invalid Object Id" });
             return;
         }        
 
         res.locals.cookieData={
-            userId,
+            treeName,
             treeId
         };
 
-        return next();
+        res.status(200).json({message:"Token validated",success:true,data:{
+            treeName,
+            treeId,
+            type
+        }})
+        return;
     } catch (err) {
         res.status(401).json({ message: "Invalid token", error: (err as Error).message });
         return;

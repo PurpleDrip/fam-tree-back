@@ -1,15 +1,13 @@
 import e from "express"
 
-import { registerUser,loginUser, clearCookies } from "../controllers/authController";
-import { setCookie } from "../utils/setCookie";
-import { CheckForCookies } from "../middlewares/authMiddleware";
+import { loginTree, registerTree,clearCookies, setCookie } from "../controllers/authController";
 import { validateUser } from "../middlewares/validateMiddleware";
 
 const router=e.Router();
 
-router.post("/register",registerUser,setCookie);
-router.post("/login",loginUser,setCookie)
+router.post("/register",registerTree,setCookie);
+router.post("/login",loginTree,setCookie)
 router.post("/logout",clearCookies)
-router.get("/session",validateUser,CheckForCookies)
+router.get("/session",validateUser)
 
 export default router;

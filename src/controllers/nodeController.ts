@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import cloudinary from "cloudinary";
 import Tree from "../models/treeModel";
-import Node, { INode } from "../models/nodeModel";
+import Node from "../models/nodeModel";
 import { Types } from "mongoose";
 
 export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
@@ -60,30 +60,6 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
     }
 }
 
-export const updatePosition=async(req:Request,res:Response,next:NextFunction):Promise<void> =>{
-    const {nodeId}=req.body;
-    const position=req.body.position as INode["position"];
-
-    try{
-        const node=await Node.findByIdAndUpdate(nodeId,{
-            position},{
-                new:true,
-                runValidators:true,
-            }
-        );
-
-        if(!node){
-            res.status(400).json({success:false,message:"Node not found"})
-            return
-        }
-
-        return next();
-    }catch(e){
-        res.status(500).json({success:false,message:"Error updating position"});
-        return;
-    }
-}
-
 export const getImagesForID=async(req:Request,res:Response)=>{
     const {id}=req.params;
 
@@ -113,7 +89,7 @@ export const deleteNode = async (req: Request, res: Response, next: NextFunction
             return;
         }
 
-        for (const img of node.images) {
+        for (const img of node.data.images) {
             await cloudinary.v2.uploader.destroy(img._id);
         }
     } catch (err) {
@@ -144,7 +120,6 @@ export const deleteNode = async (req: Request, res: Response, next: NextFunction
 
     next();
 };
-
 
 export const addImages=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
     if (!req.files || !Array.isArray(req.files)) {

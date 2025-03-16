@@ -2,96 +2,78 @@ import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 
-import User from "../models/userModel";
-import { getTreeByID } from "../services/treeService";
-import redis from "../config/redis";
-import { IRedisData } from "../services/redisService";
+import Tree from "../models/treeModel";
 
-export const registerUser=async (req:Request,res:Response,next:NextFunction):Promise<void>=>{
-    const { username, gender, dob, password, treeId, mode } = req.body;
-
-    let tree:IRedisData|null=null;
-    let treeName;
+export const registerTree=async (req:Request,res:Response,next:NextFunction):Promise<void>=>{
+    const { treeName,password,adminPassword,owner } = req.body;
 
     try{
-        const existingUser = await User.findOne({ username });
+        const existingUser = await Tree.findOne({ treeName });
         if (existingUser) {
-            res.status(400).json({ success: false, message: "Username already exists" });
+            res.status(400).json({ success: false, message: "Tree with this name already exists" });
             return ;
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedAdminPassword=await bcrypt.hash(adminPassword,10);
 
-        if (treeId) {
-            tree= await getTreeByID(treeId as string);
-            if (!tree) {
-                res.status(400).json({ message: "Tree not found" });
-                return;
-            }
-            
-            treeName=tree?.name;
-        }
 
-        const newUser = new User({ 
-            mode, 
-            username,
-            gender,
-            dob,
+        const newTree = new Tree({  
+            treeName,
             password: hashedPassword,
-            treeId, 
-            treeName: treeName || "",
+            adminPassword: hashedAdminPassword,
+            owner,
+            nodes:[],
+            edges:[]
         });
 
-        await newUser.save();
+        await newTree.save();
         
-        res.locals.data.treeId=treeId||"";
-        res.locals.data.userId=newUser.id;
+        res.locals.data.treeId=newTree.id;
+        res.locals.data.treeName=treeName;
+        res.locals.data.type="admin"
         
         next(); 
 
-        res.status(201).json({message:"Registered user successfully",success:true,data:{tree}});
+        res.status(201).json({message:"Registered user successfully",success:true,type:"admin"});
         return;
 
     } catch (error) {
-        next(error);
+        res.status(500).json({message:"Error registering Tree",success:false})
     }
 }
 
-export const loginUser=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
+export const loginTree=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
     try {
-        const { username, password } = req.body;
-        let tree:IRedisData|null=null;
+        const { treeName, password,adminPassword } = req.body;
+        let isMatch,type;
 
-        const user = await User.findOne({ username });
-        if (!user) {
-            res.status(404).json({ success: false, message: "User not found" });
+        const tree = await Tree.findOne({ treeName });
+        if (!tree) {
+            res.status(404).json({ success: false, message: "Tree not found" });
             return 
         }
 
-        const isMatch =await bcrypt.compare(password, user.password);
+        if(adminPassword){
+            isMatch=await bcrypt.compare(adminPassword, tree.adminPassword);
+            type="admin";
+        }else{
+            isMatch =await bcrypt.compare(password, tree.password);
+            type="user";
+        }
+
         if (!isMatch) {
             res.status(400).json({ success: false, message: "Invalid credentials" });
             return 
         }
 
-        if (user.treeId) {
-            try {
-                tree = await getTreeByID(user.treeId.toString());
-                if (!tree) {
-                    res.status(400).json({ message: "Tree not found" });
-                    return 
-                }
+        res.locals.data.treeId=tree.id;
+        res.locals.data.treeName=treeName;
+        res.locals.data.type=type;
 
-                res.locals.data.treeId=user.treeId;
-                res.locals.data.userId=user.id;
 
-            } catch (error) {
-                res.status(500).json({ message: "Error fetching tree" });
-                return 
-            }
-        }
         next();
-        res.status(200).json({message:"Login successfully",success:true,data:{tree}});
+        res.status(200).json({message:"Login successfully",success:true,type});
         return ;
 
     } catch (error) {
@@ -106,28 +88,12 @@ export const clearCookies = async (req: Request, res: Response): Promise<void> =
         const TOKEN_NAME = process.env.TOKEN_NAME as string;
         const token = req.body[TOKEN_NAME] || req.cookies[TOKEN_NAME];
 
-        // If no token, respond early
         if (!token) {
             res.status(400).json({ message: "No token provided" });
             return 
         }
 
-        // Clear cookie
         res.clearCookie(TOKEN_NAME);
-
-        let treeId: string | undefined;
-        try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { treeId: string };
-            treeId = decoded.treeId;
-        } catch (err: unknown) {
-            const error = err as { message: string };
-            res.status(401).json({ message: "Invalid token", error: error.message });
-            return 
-        }
-
-        if (treeId) {
-            await redis.del(`tree:${treeId}`);
-        }
 
         res.status(204).json({ message: "Cookies removed successfully" });
         return 
@@ -135,5 +101,28 @@ export const clearCookies = async (req: Request, res: Response): Promise<void> =
         const err = error as { message: string };
         res.status(500).json({ message: "Error clearing cookies", error: err.message });
         return 
+    }
+};
+
+export const setCookie = async (req:Request, res:Response) :Promise<void>=> {
+    try {
+        const { treeName,treeId,type } = res.locals.data;
+
+
+        const token = jwt.sign({ treeName,treeId,type}, process.env.JWT_SECRET as string, { expiresIn: "1d" });
+
+        res.cookie(process.env.TOKEN_NAME as string, token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 24 * 60 * 60 * 1000 ,
+        });
+
+        return ;
+    } catch (error: unknown) {
+        const err = error as { message: string };
+        console.log(err);
+        res.status(500).json({ message: "Error setting cookie", error: err.message });
+        return ;
     }
 };

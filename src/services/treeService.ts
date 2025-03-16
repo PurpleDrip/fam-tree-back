@@ -34,7 +34,7 @@ export const getTreeByID = async (treeId: string):Promise<null|IRedisData> => {
     }
 };
 
-export const addTree = async (userId:string, treeId:string, treeName:string):Promise <IUser|null> => {
+export const addTreeToUser = async (userId:string, treeId:string, treeName:string):Promise <IUser|null> => {
     try {
         const user=await User.findByIdAndUpdate(userId, { treeId, treeName }, { new: true, runValidators: true });
         return user

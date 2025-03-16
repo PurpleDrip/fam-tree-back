@@ -28,7 +28,7 @@ export const GenerteAndUpdateCache=async (treeId:string):Promise<null|IRedisData
     const validNodes = nodes.filter((node) => node !== null) as INode[];
 
     await redis.hset(`tree:${treeId}`,{
-        name:tree.name,
+        name:tree.treeName,
         nodes:JSON.stringify(validNodes),
         edges:JSON.stringify(tree.edges)
     });
@@ -36,7 +36,7 @@ export const GenerteAndUpdateCache=async (treeId:string):Promise<null|IRedisData
     await redis.expire(`tree:${treeId}`,60*5);
 
     return {
-        name:tree.name,
+        name:tree.treeName,
         nodes:validNodes,
         edges:tree.edges
     };
