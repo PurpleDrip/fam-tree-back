@@ -2,10 +2,17 @@ import mongoose from "mongoose";
 
 import redis from "../config/redis";
 import { INode } from "../models/nodeModel";
-import Tree from "../models/treeModel";
+import Tree, { IEdge } from "../models/treeModel";
 import { getNodeByID } from "./nodeService";
 
-export const GenerteAndUpdateCache=async (treeId:string)=>{
+export interface IRedisData{
+    name:string,
+    nodes:Array<INode>,
+    edges:Array<IEdge>
+}
+
+
+export const GenerteAndUpdateCache=async (treeId:string):Promise<null|IRedisData> =>{
     if(!mongoose.Types.ObjectId.isValid(treeId)){
         return null;
     }
