@@ -125,12 +125,11 @@ export const clearCookies = async (req: Request, res: Response): Promise<void> =
             return 
         }
 
-        // If treeId is found, delete from Redis
         if (treeId) {
-            await redis.del(`session:tree:${treeId}`);
+            await redis.del(`tree:${treeId}`);
         }
 
-        res.status(200).json({ message: "Cookies removed successfully" });
+        res.status(204).json({ message: "Cookies removed successfully" });
         return 
     } catch (error: unknown) {
         const err = error as { message: string };

@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
+
 import Node from "../models/nodeModel";
 
 const TOKEN_NAME = process.env.TOKEN_NAME as string;
@@ -13,21 +14,21 @@ export const validateUser=(req:Request,res:Response,next:NextFunction):void=>{
         return;
     }
 
-    let id: string;
+    let userId: string;
     let treeId: string;
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: string, treeId: string };
-        id = decoded.userId;
+        userId = decoded.userId;
         treeId = decoded.treeId;
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
             res.status(400).json({ message: "Invalid Object Id" });
             return;
         }        
 
         res.locals.cookieData={
-            id,
+            userId,
             treeId
         };
 
