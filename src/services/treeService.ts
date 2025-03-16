@@ -1,35 +1,29 @@
 import mongoose from "mongoose";
-import Tree, { ITree } from "../models/treeModel";
+
+import Tree from "../models/treeModel";
 import redis from "../config/redis";
-import { INode } from "../models/nodeModel";
 import User, { IUser } from "../models/userModel";
 import { GenerteAndUpdateCache} from "./redisService";
 
-export interface TreeData {
-    treeName: string;
-    nodes: INode[];
-    edges: ITree["edges"];
-}
 
-export const getTreeByID = async (id: string): Promise<TreeData | null> => {
+export const getTreeByID = async (treeId: string)=> {
     try {
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            console.warn(`Invalid tree ID: ${id}`);
+        if (!mongoose.Types.ObjectId.isValid(treeId)) {
+            console.warn(`Invalid tree ID: ${treeId}`);
             return null;
         }
 
-        // Check Redis cache first
-        const cachedData = await redis.get(`session:tree:${id}`) as TreeData;
+        const cachedData = await redis.hgetall(`tree:${treeId}`);
+        
         if (cachedData) {
             console.log("Cache Hit!");
             return cachedData;
-        }
-
+        }else{
         console.log("Cache Miss! Fetching from DB...");
-        const tree=GenerteAndUpdateCache(id);
+        const tree=await GenerteAndUpdateCache(treeId);
 
         return tree;
-        
+        }
     } catch (error) {
         console.error("Error retrieving tree:", error);
         return null;
