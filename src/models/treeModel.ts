@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 
 interface ITree extends Document {
     name: string;
+    owner:Types.ObjectId;
     type: string;
     nodes: Types.ObjectId[];  
     edges: Array<IEdge>; 
@@ -18,6 +19,11 @@ const TreeSchema = new Schema<ITree>({
         type: String,
         required: true,
         unique: true,
+    },
+    owner:{
+        type:Schema.Types.ObjectId,
+        ref:"User",
+        required:true,
     },
     type: {
         type: String,
