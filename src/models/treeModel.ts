@@ -1,8 +1,10 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 interface ITree extends Document {
-    name: string;
-    owner:Types.ObjectId;
+    treeName:string,
+    password:string,
+    adminPassword:string,
+    owner:string;
     type: string;
     nodes: Types.ObjectId[];  
     edges: Array<IEdge>; 
@@ -15,13 +17,21 @@ export interface IEdge {
 }
 
 const TreeSchema = new Schema<ITree>({
-    name: {
+    treeName: {
         type: String,
         required: true,
         unique: true,
     },
+    adminPassword:{
+        type:String,
+        required:true,
+    },
+    password: { 
+        type: String, 
+        required:true,
+    },
     owner:{
-        type:Schema.Types.ObjectId,
+        type:String,
         ref:"User",
         required:true,
     },
