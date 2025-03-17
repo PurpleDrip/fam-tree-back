@@ -34,27 +34,27 @@ export const getTreeByID = async (treeId: string):Promise<null|IRedisData> => {
     }
 };
 
-export const addTreeToUser = async (userId:string, treeId:string, treeName:string):Promise <IUser|null> => {
-    try {
-        const user=await User.findByIdAndUpdate(userId, { treeId, treeName }, { new: true, runValidators: true });
-        return user
-    } catch (error) {
-        return null;
-    }
-}
+// export const addTreeToUser = async (userId:string, treeId:string, treeName:string):Promise <IUser|null> => {
+//     try {
+//         const user=await User.findByIdAndUpdate(userId, { treeId, treeName }, { new: true, runValidators: true });
+//         return user
+//     } catch (error) {
+//         return null;
+//     }
+// }
 
-export const getTreeName=async (treeId :string): Promise<null|string> =>{
-    if(!treeId) return null;
+// export const getTreeName=async (treeId :string): Promise<null|string> =>{
+//     if(!treeId) return null;
 
-    try{
-    const tree=await Tree.findById(treeId,{name:1});
-    const treeName = tree ? tree.name : null;
+//     try{
+//     const tree=await Tree.findById(treeId,{name:1});
+//     const treeName = tree ? tree.name : null;
 
-    return treeName;
-    }catch(err){
-        return null;
-    }
-}
+//     return treeName;
+//     }catch(err){
+//         return null;
+//     }
+// }
 
 export const updateTree=async(): Promise<void> =>{
     const startTime = Date.now();

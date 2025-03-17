@@ -35,7 +35,11 @@ export const registerTree=async (req:Request,res:Response,next:NextFunction):Pro
         
         next(); 
 
-        res.status(201).json({message:"Registered user successfully",success:true,type:"admin"});
+        res.status(201).json({message:"Registered user successfully",success:true,data:{
+            type:"admin",
+            treeName,
+            treeId:newTree.id
+        }});
         return;
 
     } catch (error) {
@@ -73,7 +77,11 @@ export const loginTree=async (req:Request,res:Response,next:NextFunction):Promis
 
 
         next();
-        res.status(200).json({message:"Login successfully",success:true,type});
+        res.status(200).json({message:"Login successfully",success:true,data:{
+            type,
+            treeName,
+            treeId:tree.id,
+        }});
         return ;
 
     } catch (error) {
