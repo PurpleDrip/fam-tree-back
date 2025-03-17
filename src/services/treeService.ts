@@ -2,59 +2,59 @@ import mongoose from "mongoose";
 
 import Tree, { IEdge } from "../models/treeModel";
 import redis from "../config/redis";
-import { GenerteAndUpdateCache, IRedisData} from "./redisService";
 import Node, { INode } from "../models/nodeModel";
+import redisTree from "../interfaces/tree";
 
 
-export const getTreeByID = async (treeId: string):Promise<null|IRedisData> => {
+export const getTreeByID = async (treeId: string):Promise<null|redisTree> => {
+    let tree: redisTree | null = null;
+
     try {
-        if (!mongoose.Types.ObjectId.isValid(treeId)) {
-            console.warn(`Invalid tree ID: ${treeId}`);
-            return null;
+        const redisTree = await redis.hgetall(`tree:${treeId}`);
+
+        if (!redisTree || Object.keys(redisTree).length === 0) {
+            const oTree = await Tree.findById(treeId);
+            
+            if (!oTree) {
+                return null;
+            }
+
+            const nodesPromise = oTree.nodes.map((nodeId) => {
+                return Node.findById(nodeId);
+            });
+
+            const nodes = await Promise.all(nodesPromise);
+
+            tree = {
+                treeName: oTree.treeName,
+                nodes: nodes.filter(node => node !== null) as INode[],
+                edges: oTree.edges || [],
+            };
+
+            await redis.hset(`tree:${treeId}`,{
+                treeName:tree.treeName,
+                nodes:JSON.stringify(tree.nodes),
+                edges:JSON.stringify(tree.edges)
+            })
+
+            await redis.expire(`tree:${treeId}`,60*5);
+
+        } else {
+            tree = {
+                treeName: redisTree?.treeName as string || "",
+                nodes: JSON.parse(redisTree.nodes as string) || [],
+                edges: JSON.parse(redisTree.edges as string) || []
+            };
         }
 
-        const cachedData = await redis.hgetall(`tree:${treeId}`);
-        
-        if (cachedData  && Object.keys(cachedData).length > 0) {
-            console.log("Cache Hit!");
-            return {
-                name: cachedData.name as string,
-                nodes: JSON.parse(cachedData.nodes as string),
-                edges: JSON.parse(cachedData.edges as string)
-              };
-        }else{
-        console.log("Cache Miss! Fetching from DB...");
-        const tree=await GenerteAndUpdateCache(treeId);
+        return tree; 
 
-        return tree;
-        }
     } catch (error) {
         console.error("Error retrieving tree:", error);
         return null;
     }
 };
 
-// export const addTreeToUser = async (userId:string, treeId:string, treeName:string):Promise <IUser|null> => {
-//     try {
-//         const user=await User.findByIdAndUpdate(userId, { treeId, treeName }, { new: true, runValidators: true });
-//         return user
-//     } catch (error) {
-//         return null;
-//     }
-// }
-
-// export const getTreeName=async (treeId :string): Promise<null|string> =>{
-//     if(!treeId) return null;
-
-//     try{
-//     const tree=await Tree.findById(treeId,{name:1});
-//     const treeName = tree ? tree.name : null;
-
-//     return treeName;
-//     }catch(err){
-//         return null;
-//     }
-// }
 
 export const updateTree=async(): Promise<void> =>{
     const startTime = Date.now();

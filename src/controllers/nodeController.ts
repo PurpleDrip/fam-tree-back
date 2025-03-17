@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import cloudinary from "cloudinary";
 import Tree from "../models/treeModel";
-import Node from "../models/nodeModel";
 import { Types } from "mongoose";
+import Node from "../models/nodeModel";
 
 export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
     const {id,treeId}=res.locals.cookieData;
@@ -23,14 +23,17 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
         })) : [];
 
         const newNode = new Node({
-            name,
-            relation,
-            gender,
-            description,
-            dob,
-            images, 
-            mainImg:images.length > 0 ? images[0].url : "",
-            role,
+            type:"custom",
+            data:{
+                name,
+                relation,
+                gender,
+                description,
+                dob,
+                role,
+                images,
+                mainImg:images.length > 0 ? images[0].url : "",
+            },
             treeId,
             position:JSON.parse(position)
         });
@@ -52,7 +55,9 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
             return
         }
 
-        return next();
+        next();
+        res.status(200).json({success:true});
+        return;
     }catch(error){
         console.log(error)
         res.status(500).json({ success: false, message: "Error creating node" });
@@ -71,7 +76,7 @@ export const getImagesForID=async(req:Request,res:Response)=>{
             return;
         }
         res.status(200).json({data:node,success:true,});
-        return
+        return;
     }catch(err){
         res.status(400).json({message:"Server error",success:false});
         return;
@@ -89,9 +94,9 @@ export const deleteNode = async (req: Request, res: Response, next: NextFunction
             return;
         }
 
-        for (const img of node.data.images) {
-            await cloudinary.v2.uploader.destroy(img._id);
-        }
+        const imgPromise=node.data.images.map(img=>cloudinary.v2.uploader.destroy(img._id));
+        await Promise.all(imgPromise)
+
     } catch (err) {
         res.status(400).json({ message: "Error deleting node", success: false });
         return;
@@ -119,6 +124,8 @@ export const deleteNode = async (req: Request, res: Response, next: NextFunction
     }
 
     next();
+    res.status(200).json({success:true});
+    return;
 };
 
 export const addImages=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
@@ -134,7 +141,7 @@ export const addImages=async (req:Request,res:Response,next:NextFunction):Promis
 
     try{
         await Node.findByIdAndUpdate(req.body.nodeId,
-            { $push: { images: { $each: images } } },
+            {data:{$push: { images: { $each: images } } }},
             { new: true, runValidators: true }
         )
     }catch(err){
@@ -142,6 +149,8 @@ export const addImages=async (req:Request,res:Response,next:NextFunction):Promis
         return;
     }
     next();
+    res.status(200).json({success:true});
+    return;
 }
 
 export const changeDP=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
@@ -149,11 +158,13 @@ export const changeDP=async (req:Request,res:Response,next:NextFunction):Promise
 
     try{
         await Node.findByIdAndUpdate(nodeId,
-            {mainImg:url},
+            {data:{mainImg:url}},
             {runValidators:true,new:true}
         )
 
         next();
+        res.status(200).json({success:true});
+        return;
     }catch(err){
         res.status(400).json({message:"Couldn't update DP for this nodeID"});
         return;
@@ -165,7 +176,7 @@ export const deleteImgById=async(req:Request,res:Response,next:NextFunction):Pro
 
     try{
         await Node.findByIdAndUpdate(nodeId,
-            {$pull:{images:{_id:imgId}}}
+            {data:{$pull:{images:{_id:imgId}}}}
         )
 
         await cloudinary.v2.uploader.destroy(imgId);
@@ -176,4 +187,6 @@ export const deleteImgById=async(req:Request,res:Response,next:NextFunction):Pro
         return;
     }
     next();
+    res.status(200).json({success:true});
+    return;
 }

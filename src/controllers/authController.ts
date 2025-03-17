@@ -29,9 +29,11 @@ export const registerTree=async (req:Request,res:Response,next:NextFunction):Pro
 
         await newTree.save();
         
-        res.locals.data.treeId=newTree.id;
-        res.locals.data.treeName=treeName;
-        res.locals.data.type="admin"
+        res.locals.data={
+            treeId:newTree.id,
+            treeName,
+            type:"admin"
+        }
         
         next(); 
 
@@ -43,6 +45,7 @@ export const registerTree=async (req:Request,res:Response,next:NextFunction):Pro
         return;
 
     } catch (error) {
+        console.log(error)
         res.status(500).json({message:"Error registering Tree",success:false})
     }
 }
@@ -71,9 +74,11 @@ export const loginTree=async (req:Request,res:Response,next:NextFunction):Promis
             return 
         }
 
-        res.locals.data.treeId=tree.id;
-        res.locals.data.treeName=treeName;
-        res.locals.data.type=type;
+        res.locals.data={
+            treeId:tree.id,
+            treeName,
+            type
+        }
 
 
         next();
