@@ -33,44 +33,17 @@ export const getTreeByID = async (treeId: string):Promise<null|redisTree> => {
 
             await redis.hset(`tree:${treeId}`,{
                 treeName:tree.treeName,
-                nodes:JSON.stringify(tree.nodes),
-                edges:JSON.stringify(tree.edges)
+                nodes:tree.nodes,
+                edges:tree.edges
             })
 
             await redis.expire(`tree:${treeId}`,60*5);
 
         } else {
-            let parsedEdges;
-            let parsedNodes;
-
-            try {
-                if (redisTree.nodes) {
-                    if (redisTree.nodes === "[]") {
-                        parsedNodes = [];
-                    } else {
-                        parsedNodes = JSON.parse(redisTree.nodes as string);
-                    }
-                }
-            } catch (error) {
-                parsedNodes = [];
-            }
-            
-            try {
-                if (redisTree.edges) {
-                    if (redisTree.edges === "[]") {
-                        parsedEdges = [];
-                    } else {
-                        parsedEdges = JSON.parse(redisTree.edges as string);
-                    }
-                }
-            } catch (error) {
-                parsedEdges = [];
-            }
-
             tree = {
                 treeName: redisTree?.treeName as string || "",
-                nodes: parsedNodes,
-                edges: parsedEdges
+                nodes:redisTree.nodes as INode[],
+                edges: redisTree.edges as IEdge[]
             };
         }
 
@@ -111,8 +84,8 @@ export const updateTree=async(): Promise<void> =>{
                     continue;
                 }
 
-                const nodes = JSON.parse(redisTree.nodes as string) as INode[];
-                const edges = JSON.parse(redisTree.edges as string) as IEdge[];
+                const nodes = redisTree.nodes as INode[];
+                const edges = redisTree.edges as IEdge[];
 
                 await Tree.findByIdAndUpdate(treeId,{
                     edges,

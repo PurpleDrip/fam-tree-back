@@ -1,5 +1,5 @@
 import { Request, Response } from "express"
-import Tree from "../models/treeModel";
+import Tree, { IEdge } from "../models/treeModel";
 import redis from "../config/redis";
 import Node, { INode } from "../models/nodeModel";
 import redisTree from "../interfaces/tree";
@@ -21,40 +21,12 @@ export const updateCache = async (req: Request, res: Response): Promise<void> =>
         if (!oldRedisTree || Object.keys(oldRedisTree).length === 0) {
             return;
         } else {
-            let parsedEdges;
-            let parsedNodes;
-
-            try {
-                if (oldRedisTree.nodes) {
-                    if (oldRedisTree.nodes === "[]") {
-                        parsedNodes = [];
-                    } else {
-                        parsedNodes = JSON.parse(oldRedisTree.nodes as string);
-                    }
-                }
-            } catch (error) {
-                parsedNodes = [];
+            const tree : redisTree={
+                treeName:oldRedisTree.treeName as string,
+                nodes:oldRedisTree.nodes as INode[],
+                edges:oldRedisTree.edges as IEdge[]
             }
-            
-            try {
-                if (oldRedisTree.edges) {
-                    if (oldRedisTree.edges === "[]") {
-                        parsedEdges = [];
-                    } else {
-                        parsedEdges = JSON.parse(oldRedisTree.edges as string);
-                    }
-                }
-            } catch (error) {
-                parsedEdges = [];
-            }
-
-            const oldRedisTreeParsed = {
-                treeName: oldRedisTree.treeName,
-                nodes: parsedNodes,
-                edges: parsedEdges
-            };
-
-            const nodePositions = oldRedisTreeParsed.nodes.reduce((map :Record<string, { x: number, y: number }>, node:INode) => {
+            const nodePositions = tree.nodes.reduce((map :Record<string, { x: number, y: number }>, node:INode) => {
                 map[node.id] = node.position;
                 return map;
             }, {} as Record<string, { x: number, y: number }>);
@@ -70,7 +42,7 @@ export const updateCache = async (req: Request, res: Response): Promise<void> =>
 
             const newRedisTree = {
                 treeName: oTree.treeName,
-                nodes: JSON.stringify(dbData.nodes.map(node => {
+                nodes: dbData.nodes.map(node => {
                     if (nodePositions[node.id]) {
                         return {
                             ...node.toObject(),
@@ -78,8 +50,8 @@ export const updateCache = async (req: Request, res: Response): Promise<void> =>
                         };
                     }
                     return node.toObject();
-                })),
-                edges: JSON.stringify(oldRedisTreeParsed.edges),
+                }),
+                edges: tree.edges,
             };
 
             await redis.hset(`tree:${treeId}`, newRedisTree);
