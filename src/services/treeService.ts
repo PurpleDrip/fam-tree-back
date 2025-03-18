@@ -94,14 +94,15 @@ export const updateTree=async(): Promise<void> =>{
                     edges,
                 },{session});
 
-                const nodeUpdatePromises = nodes.map(node => 
-                    Node.findByIdAndUpdate(node.id, {
-                        position: node.position,
-                    },{session})
+                await Node.bulkWrite(
+                    nodes.map((node) => ({
+                      updateOne: {
+                        filter: { _id: node.id },
+                        update: { position: node.position },
+                      },
+                    })),
+                    { session }
                 );
-
-                await Promise.all(nodeUpdatePromises);
-                await session.commitTransaction();
 
                 await redis.srem('trees:modified', treeId);
                 results.push({ treeId, status: 'updated' });
@@ -120,7 +121,7 @@ export const updateTree=async(): Promise<void> =>{
         console.log("Failed: ",results.filter(r => r.status === 'failed').length);
         console.log("Details: ",results)
         const duration = Date.now() - startTime;
-        console.log(`Sync completed in ${duration}ms, updated ${results.length} trees`);
+        console.log(`Sync completed in ${duration}ms, updated ${results.length} trees \n`);
     }catch(err){
         console.error("Error in updateTree:", err);
 
