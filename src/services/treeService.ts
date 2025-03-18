@@ -89,8 +89,6 @@ export const updateTree=async(): Promise<void> =>{
 
                 const nodes = redisTree.nodes as INode[];
                 const edges = redisTree.edges as IEdge[];
-                console.log(nodes)
-                console.log(edges)
 
                 await Tree.findByIdAndUpdate(treeId, { $set: { edges: edges || [] } }, { session });
 
