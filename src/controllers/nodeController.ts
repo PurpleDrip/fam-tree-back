@@ -56,7 +56,6 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
         }
 
         next();
-        res.status(200).json({success:true});
         return;
     }catch(error){
         console.log(error)
@@ -75,7 +74,7 @@ export const getImagesForID=async(req:Request,res:Response)=>{
             res.status(400).json({message:"No node found ",success:false});
             return;
         }
-        res.status(200).json({data:node,success:true,});
+        res.status(200).json({data:node})
         return;
     }catch(err){
         res.status(400).json({message:"Server error",success:false});
@@ -124,7 +123,6 @@ export const deleteNode = async (req: Request, res: Response, next: NextFunction
     }
 
     next();
-    res.status(200).json({success:true});
     return;
 };
 
@@ -149,7 +147,6 @@ export const addImages=async (req:Request,res:Response,next:NextFunction):Promis
         return;
     }
     next();
-    res.status(200).json({success:true});
     return;
 }
 
@@ -163,7 +160,6 @@ export const changeDP=async (req:Request,res:Response,next:NextFunction):Promise
         )
 
         next();
-        res.status(200).json({success:true});
         return;
     }catch(err){
         res.status(400).json({message:"Couldn't update DP for this nodeID"});
@@ -187,6 +183,5 @@ export const deleteImgById=async(req:Request,res:Response,next:NextFunction):Pro
         return;
     }
     next();
-    res.status(200).json({success:true});
     return;
 }
