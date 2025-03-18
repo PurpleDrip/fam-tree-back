@@ -69,7 +69,7 @@ export const validateNode=async (req:Request,res:Response,next:NextFunction) : P
 
     if(!override){
         try{
-            const node=await Node.findOne({name})
+            const node=await Node.findOne({"data.name":name})
 
             if(node){
                 res.status(400).json({success:false,message:"A node with this name already exists."});
