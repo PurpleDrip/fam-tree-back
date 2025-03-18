@@ -7,8 +7,8 @@ import cookieParser from "cookie-parser";
 
 import connectDB from "./config/db";
 import authRoute from "./routes/authRoute"
-// import treeRoute from "./routes/treeRoute"
-// import nodeRoute from "./routes/nodeRoute"
+import treeRoute from "./routes/treeRoute"
+import nodeRoute from "./routes/nodeRoute"
 import startUpdateDaemon from "./services/cronService";
 
 const app = express();
@@ -28,8 +28,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth",authRoute);
-// app.use("/api",treeRoute);
-// app.use("/api/node",nodeRoute);
+app.use("/api",treeRoute);
+app.use("/api/node",nodeRoute);
 
 app.use((err:Error, req: Request, res:Response, next:NextFunction) => {
     console.error("Global Error Handler:", err);

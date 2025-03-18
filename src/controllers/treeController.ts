@@ -1,10 +1,6 @@
-import { NextFunction, Request, Response } from "express";
+import {  Request, Response } from "express";
 
 import Tree from "../models/treeModel";
-import { getNodeByID } from "../services/nodeService";
-import Node, { INode } from "../models/nodeModel";
-import redis from "../config/redis";
-import redisTree from "../interfaces/tree";
 import { getTreeByID } from "../services/treeService";
 
 export const getTree = async (req: Request, res: Response): Promise<void> => {
@@ -15,6 +11,7 @@ export const getTree = async (req: Request, res: Response): Promise<void> => {
 
         if(!tree){
             res.status(400).json({message:"No tree found",success:false})
+            return;
         }
 
         res.status(200).json({ tree });

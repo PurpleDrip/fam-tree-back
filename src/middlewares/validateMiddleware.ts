@@ -33,13 +33,7 @@ export const validateUser=(req:Request,res:Response,next:NextFunction):void=>{
             treeName,
             treeId
         };
-
-        res.status(200).json({message:"Token validated",success:true,data:{
-            treeName,
-            treeId,
-            type
-        }})
-        return;
+        next();
     } catch (err) {
         res.status(401).json({ message: "Invalid token", error: (err as Error).message });
         return;

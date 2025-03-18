@@ -40,10 +40,29 @@ export const getTreeByID = async (treeId: string):Promise<null|redisTree> => {
             await redis.expire(`tree:${treeId}`,60*5);
 
         } else {
+            let parsedNodes = [];
+            let parsedEdges = [];
+
+            try {
+                if (redisTree.nodes && redisTree.nodes !== "[]" && redisTree.nodes !== "") {
+                    parsedNodes = JSON.parse(redisTree.nodes as string);
+                }
+            } catch (error) {
+                console.error("Error parsing nodes from Redis:", error, "Raw value:", redisTree.nodes);
+            }
+
+            try {
+                if (redisTree.edges && redisTree.edges !== "[]" && redisTree.edges !== "") {
+                    parsedEdges = JSON.parse(redisTree.edges as string);
+                }
+            } catch (error) {
+                console.error("Error parsing edges from Redis:", error, "Raw value:", redisTree.edges);
+            }
+
             tree = {
                 treeName: redisTree?.treeName as string || "",
-                nodes: JSON.parse(redisTree.nodes as string) || [],
-                edges: JSON.parse(redisTree.edges as string) || []
+                nodes: parsedNodes,
+                edges: parsedEdges
             };
         }
 
