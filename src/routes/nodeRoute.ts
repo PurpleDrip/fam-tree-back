@@ -12,7 +12,7 @@ router.post("/deletenode",validateUser,deleteNode,updateCache)
 router.put("/addimagestoid",validateUser,uploadMiddleware,addImages,updateCache)
 router.post("/deleteimgbyid",validateUser,deleteImgById,updateCache)
 
-router.get("/getimagesbyid/:id",getImagesForID)
+router.get("/getimagesbyid/:id",getImagesForID)  
 router.post("/changedp",validateUser,changeDP,updateCache);
 
 export default router;

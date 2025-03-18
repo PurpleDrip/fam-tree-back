@@ -30,7 +30,6 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
                 gender,
                 description,
                 dob,
-                role,
                 images,
                 mainImg:images.length > 0 ? images[0].url : "",
             },
@@ -139,8 +138,8 @@ export const addImages=async (req:Request,res:Response,next:NextFunction):Promis
 
     try{
         await Node.findByIdAndUpdate(req.body.nodeId,
-            {data:{$push: { images: { $each: images } } }},
-            { new: true, runValidators: true }
+            { $push: { "data.images": { $each: images } } },
+            { runValidators: true }
         )
     }catch(err){
         res.status(500).json({"message":"Error uploading images to node",success:false})
@@ -155,8 +154,8 @@ export const changeDP=async (req:Request,res:Response,next:NextFunction):Promise
 
     try{
         await Node.findByIdAndUpdate(nodeId,
-            {data:{mainImg:url}},
-            {runValidators:true,new:true}
+            { $set: { "data.mainImg": url } }, 
+            { runValidators: true, new: true }
         )
 
         next();
@@ -172,7 +171,7 @@ export const deleteImgById=async(req:Request,res:Response,next:NextFunction):Pro
 
     try{
         await Node.findByIdAndUpdate(nodeId,
-            {data:{$pull:{images:{_id:imgId}}}}
+            { $pull: { "data.images": { _id: imgId } } }
         )
 
         await cloudinary.v2.uploader.destroy(imgId);

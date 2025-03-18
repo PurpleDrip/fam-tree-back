@@ -13,7 +13,6 @@ interface INode extends Document{
         gender:string,
         description:string,
         dob:string,
-        role:string,
         images: Array<IImage>,
         mainImg:string,
     }
@@ -50,11 +49,6 @@ const NodeSchema = new Schema<INode>({
         dob: { 
             type: String, 
             required: true 
-        },
-        role: {
-            type: String,
-            enum: ["admin", "viewer", "owner"],
-            default: null
         },
         images: [{
             _id:{ type: String, required: true },

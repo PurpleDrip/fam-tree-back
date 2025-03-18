@@ -89,24 +89,30 @@ export const updateTree=async(): Promise<void> =>{
 
                 const nodes = redisTree.nodes as INode[];
                 const edges = redisTree.edges as IEdge[];
+                console.log(nodes)
+                console.log(edges)
 
-                await Tree.findByIdAndUpdate(treeId,{
-                    edges,
-                },{session});
+                await Tree.findByIdAndUpdate(treeId, { $set: { edges: edges || [] } }, { session });
 
-                await Node.bulkWrite(
-                    nodes.map((node) => ({
-                      updateOne: {
-                        filter: { _id: node.id },
-                        update: { position: node.position },
-                      },
-                    })),
-                    { session }
-                );
+                if (nodes.length > 0) {
+                    await Node.bulkWrite(
+                        nodes
+                        .filter(node => node.id && node.position) 
+                        .map((node) => ({
+                            updateOne: {
+                                filter: { _id:  new mongoose.Types.ObjectId(node.id) },
+                                update: { $set: { position: node.position } },
+                            },
+                        })),
+                        { session }
+                    );
+                }
 
                 await redis.srem('trees:modified', treeId);
                 results.push({ treeId, status: 'updated' });
                 console.log(`Tree ${treeId} synchronized with MongoDB`);
+                await session.commitTransaction();
+
             }catch(err){
                 console.error(`Error updating tree ${treeId}:`, err);
                 results.push({ treeId, status: 'failed', error: (err as Error).message });
