@@ -6,14 +6,16 @@ export interface IImage{
 }
 
 interface INode extends Document{
-    name:string,
-    relation:string,
-    gender:string,
-    description:string,
-    dob:string,
-    images: Array<IImage>,
-    mainImg:string,
-    role:string,
+    type:"custom",
+    data:{
+        name:string,
+        relation:string,
+        gender:string,
+        description:string,
+        dob:string,
+        images: Array<IImage>,
+        mainImg:string,
+    }
     treeId:Types.ObjectId,
     position:{
         x:number,
@@ -22,40 +24,41 @@ interface INode extends Document{
 }
 
 const NodeSchema = new Schema<INode>({
-    name: { 
-        type: String, 
-        required: true 
-    },
-    relation: {
-        type: String,
-        required: true
-    },
-    gender: { 
-        type: String, 
-        enum: ["male", "female", "others"], 
-        required: true 
-    },
-    description: {
-        type: String,
-        required: true
-    },
-    dob: { 
-        type: String, 
-        required: true 
-    },
-    images: [{
-        _id:{ type: String, required: true },
-        url:{ type: String, required: true }
-     }
-    ],
-    mainImg:{
+    type:{
         type:String,
-        required:true,
+        default:"custom"
     },
-    role: {
-        type: String,
-        enum: ["admin", "viewer", "owner"],
-        default: null
+    data:{
+        name: { 
+            type: String, 
+            required: true 
+        },
+        relation: {
+            type: String,
+            required: true
+        },
+        gender: { 
+            type: String, 
+            enum: ["male", "female", "others"], 
+            required: true 
+        },
+        description: {
+            type: String,
+            required: true
+        },
+        dob: { 
+            type: String, 
+            required: true 
+        },
+        images: [{
+            _id:{ type: String, required: true },
+            url:{ type: String, required: true }
+         }
+        ],
+        mainImg:{
+            type:String,
+            required:true,
+        },
     },
     treeId: {
         type: Schema.Types.ObjectId,

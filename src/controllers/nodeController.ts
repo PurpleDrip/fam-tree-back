@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import cloudinary from "cloudinary";
 import Tree from "../models/treeModel";
-import Node, { INode } from "../models/nodeModel";
 import { Types } from "mongoose";
+import Node from "../models/nodeModel";
 
 export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
     const {id,treeId}=res.locals.cookieData;
@@ -23,14 +23,16 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
         })) : [];
 
         const newNode = new Node({
-            name,
-            relation,
-            gender,
-            description,
-            dob,
-            images, 
-            mainImg:images.length > 0 ? images[0].url : "",
-            role,
+            type:"custom",
+            data:{
+                name,
+                relation,
+                gender,
+                description,
+                dob,
+                images,
+                mainImg:images.length > 0 ? images[0].url : "",
+            },
             treeId,
             position:JSON.parse(position)
         });
@@ -52,34 +54,11 @@ export const createNode=async (req:Request,res:Response,next:NextFunction)=>{
             return
         }
 
-        return next();
+        next();
+        return;
     }catch(error){
         console.log(error)
         res.status(500).json({ success: false, message: "Error creating node" });
-        return;
-    }
-}
-
-export const updatePosition=async(req:Request,res:Response,next:NextFunction):Promise<void> =>{
-    const {nodeId}=req.body;
-    const position=req.body.position as INode["position"];
-
-    try{
-        const node=await Node.findByIdAndUpdate(nodeId,{
-            position},{
-                new:true,
-                runValidators:true,
-            }
-        );
-
-        if(!node){
-            res.status(400).json({success:false,message:"Node not found"})
-            return
-        }
-
-        return next();
-    }catch(e){
-        res.status(500).json({success:false,message:"Error updating position"});
         return;
     }
 }
@@ -94,8 +73,8 @@ export const getImagesForID=async(req:Request,res:Response)=>{
             res.status(400).json({message:"No node found ",success:false});
             return;
         }
-        res.status(200).json({data:node,success:true,});
-        return
+        res.status(200).json({data:node})
+        return;
     }catch(err){
         res.status(400).json({message:"Server error",success:false});
         return;
@@ -113,9 +92,9 @@ export const deleteNode = async (req: Request, res: Response, next: NextFunction
             return;
         }
 
-        for (const img of node.images) {
-            await cloudinary.v2.uploader.destroy(img._id);
-        }
+        const imgPromise=node.data.images.map(img=>cloudinary.v2.uploader.destroy(img._id));
+        await Promise.all(imgPromise)
+
     } catch (err) {
         res.status(400).json({ message: "Error deleting node", success: false });
         return;
@@ -143,8 +122,8 @@ export const deleteNode = async (req: Request, res: Response, next: NextFunction
     }
 
     next();
+    return;
 };
-
 
 export const addImages=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
     if (!req.files || !Array.isArray(req.files)) {
@@ -159,14 +138,15 @@ export const addImages=async (req:Request,res:Response,next:NextFunction):Promis
 
     try{
         await Node.findByIdAndUpdate(req.body.nodeId,
-            { $push: { images: { $each: images } } },
-            { new: true, runValidators: true }
+            { $push: { "data.images": { $each: images } } },
+            { runValidators: true }
         )
     }catch(err){
         res.status(500).json({"message":"Error uploading images to node",success:false})
         return;
     }
     next();
+    return;
 }
 
 export const changeDP=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
@@ -174,11 +154,12 @@ export const changeDP=async (req:Request,res:Response,next:NextFunction):Promise
 
     try{
         await Node.findByIdAndUpdate(nodeId,
-            {mainImg:url},
-            {runValidators:true,new:true}
+            { $set: { "data.mainImg": url } }, 
+            { runValidators: true, new: true }
         )
 
         next();
+        return;
     }catch(err){
         res.status(400).json({message:"Couldn't update DP for this nodeID"});
         return;
@@ -190,7 +171,7 @@ export const deleteImgById=async(req:Request,res:Response,next:NextFunction):Pro
 
     try{
         await Node.findByIdAndUpdate(nodeId,
-            {$pull:{images:{_id:imgId}}}
+            { $pull: { "data.images": { _id: imgId } } }
         )
 
         await cloudinary.v2.uploader.destroy(imgId);
@@ -201,4 +182,39 @@ export const deleteImgById=async(req:Request,res:Response,next:NextFunction):Pro
         return;
     }
     next();
+    return;
 }
+
+export const editNode=async(req:Request,res:Response,next:NextFunction):Promise<void> =>{
+    const {nodeId,name,relation,gender,dob,description}=req.body;
+
+    console.log(req.body)
+
+    try {
+        const updatedNode=await Node.findByIdAndUpdate(
+            nodeId,
+            {
+                $set: {
+                    "data.name": name,
+                    "data.relation": relation,
+                    "data.gender": gender,
+                    "data.dob": dob,
+                    "data.description": description,
+                },
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedNode) {
+            res.status(404).json({ message: "Node not found", success: false });
+            return ;
+        }
+
+        return next();
+    } catch (error) {
+        console.error("Error updating node:", error);
+        res.status(500).json({ message: "Internal server error", success: false });
+    }
+}
+
+

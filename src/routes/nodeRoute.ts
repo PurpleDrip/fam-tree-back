@@ -1,19 +1,19 @@
 import e from "express"
-import { addImages, changeDP, createNode, deleteImgById, deleteNode, getImagesForID, updatePosition } from "../controllers/nodeController";
+import { addImages, changeDP, createNode, deleteImgById, deleteNode, editNode, getImagesForID } from "../controllers/nodeController";
 import { validateNode, validateUser } from "../middlewares/validateMiddleware";
-import { UpdateCache } from "../middlewares/cacheMiddleware";
 import { uploadMiddleware } from "../middlewares/uploadMiddleware";
+import { updateCache } from "../middlewares/cacheMiddleware";
 
 const router=e.Router();
 
-router.post("/addnode",validateUser,validateNode,uploadMiddleware,createNode,UpdateCache)
-router.post("/updateposition",validateUser,updatePosition,UpdateCache)
+router.post("/addnode",validateUser,uploadMiddleware,createNode,updateCache)
+router.post("/deletenode",validateUser,deleteNode,updateCache)
+router.put("/editnode",validateUser,editNode,updateCache)
 
-router.put("/addimagestoid",validateUser,uploadMiddleware,addImages,UpdateCache)
-router.get("/getimagesbyid/:id",getImagesForID)
-router.post("/changedp",validateUser,changeDP,UpdateCache);
-router.post("/deleteimgbyid",validateUser,deleteImgById,UpdateCache)
+router.put("/addimagestoid",validateUser,uploadMiddleware,addImages,updateCache)
+router.post("/deleteimgbyid",validateUser,deleteImgById,updateCache)
 
-router.post("/deletenode",validateUser,deleteNode,UpdateCache)
+router.get("/getimagesbyid/:id",getImagesForID)  
+router.post("/changedp",validateUser,changeDP,updateCache);
 
 export default router;
