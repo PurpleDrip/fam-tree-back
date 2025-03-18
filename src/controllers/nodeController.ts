@@ -184,3 +184,37 @@ export const deleteImgById=async(req:Request,res:Response,next:NextFunction):Pro
     next();
     return;
 }
+
+export const editNode=async(req:Request,res:Response,next:NextFunction):Promise<void> =>{
+    const {nodeId,name,relation,gender,dob,description}=req.body;
+
+    console.log(req.body)
+
+    try {
+        const updatedNode=await Node.findByIdAndUpdate(
+            nodeId,
+            {
+                $set: {
+                    "data.name": name,
+                    "data.relation": relation,
+                    "data.gender": gender,
+                    "data.dob": dob,
+                    "data.description": description,
+                },
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedNode) {
+            res.status(404).json({ message: "Node not found", success: false });
+            return ;
+        }
+
+        return next();
+    } catch (error) {
+        console.error("Error updating node:", error);
+        res.status(500).json({ message: "Internal server error", success: false });
+    }
+}
+
+
