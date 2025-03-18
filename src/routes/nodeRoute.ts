@@ -15,7 +15,4 @@ router.post("/deleteimgbyid",validateUser,deleteImgById,updateCache)
 router.get("/getimagesbyid/:id",getImagesForID)
 router.post("/changedp",validateUser,changeDP,updateCache);
 
-
-
-
 export default router;

@@ -19,6 +19,20 @@ export const updateCache = async (req: Request, res: Response): Promise<void> =>
         const oldRedisTree = await redis.hgetall(`tree:${treeId}`);
 
         if (!oldRedisTree || Object.keys(oldRedisTree).length === 0) {
+            const nodesPromise = oTree.nodes.map(nodeId => Node.findById(nodeId));
+            const nodes = (await Promise.all(nodesPromise)).filter(node => node !== null) as INode[];
+        
+            const newRedisTree = {
+                treeId: oTree.id,
+                treeName: oTree.treeName,
+                nodes,
+                edges: oTree.edges,
+            };
+        
+            await redis.hset(`tree:${treeId}`, newRedisTree);
+            await redis.expire(`tree:${treeId}`, 60 * 30);
+        
+            res.status(200).json({ data: newRedisTree });
             return;
         } else {
             const tree : redisTree={
@@ -43,13 +57,13 @@ export const updateCache = async (req: Request, res: Response): Promise<void> =>
             };
 
             const newRedisTree = {
-                treeId:oTree.treeName,
+                treeId:oTree.id,
                 treeName: oTree.treeName,
                 nodes: dbData.nodes.map(node => {
                     if (nodePositions[node.id]) {
                         return {
                             ...node.toObject(),
-                            position: nodePositions[node.id]  
+                            position: nodePositions[node.id]  || node.position
                         };
                     }
                     return node.toObject();
