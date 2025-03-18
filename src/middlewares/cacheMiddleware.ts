@@ -22,6 +22,7 @@ export const updateCache = async (req: Request, res: Response): Promise<void> =>
             return;
         } else {
             const tree : redisTree={
+                treeId:oldRedisTree.treeId as string,
                 treeName:oldRedisTree.treeName as string,
                 nodes:oldRedisTree.nodes as INode[],
                 edges:oldRedisTree.edges as IEdge[]
@@ -35,12 +36,14 @@ export const updateCache = async (req: Request, res: Response): Promise<void> =>
             const nodes = await Promise.all(nodesPromise);
 
             const dbData: redisTree = {
+                treeId:oTree.id,
                 treeName: oTree.treeName,
                 nodes: nodes.filter(node => node !== null) as INode[],
                 edges: oTree.edges,
             };
 
             const newRedisTree = {
+                treeId:oTree.treeName,
                 treeName: oTree.treeName,
                 nodes: dbData.nodes.map(node => {
                     if (nodePositions[node.id]) {

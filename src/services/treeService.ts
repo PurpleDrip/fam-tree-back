@@ -26,12 +26,14 @@ export const getTreeByID = async (treeId: string):Promise<null|redisTree> => {
             const nodes = await Promise.all(nodesPromise);
 
             tree = {
+                treeId:oTree.id,
                 treeName: oTree.treeName,
                 nodes: nodes.filter(node => node !== null) as INode[],
                 edges: oTree.edges || [],
             };
 
             await redis.hset(`tree:${treeId}`,{
+                treeId:tree.treeId,
                 treeName:tree.treeName,
                 nodes:tree.nodes,
                 edges:tree.edges
@@ -41,6 +43,7 @@ export const getTreeByID = async (treeId: string):Promise<null|redisTree> => {
 
         } else {
             tree = {
+                treeId:redisTree.treeId as string || "",
                 treeName: redisTree?.treeName as string || "",
                 nodes:redisTree.nodes as INode[],
                 edges: redisTree.edges as IEdge[]
@@ -92,7 +95,7 @@ export const updateTree=async(): Promise<void> =>{
                 },{session});
 
                 const nodeUpdatePromises = nodes.map(node => 
-                    Node.findByIdAndUpdate(node._id, {
+                    Node.findByIdAndUpdate(node.id, {
                         position: node.position,
                     },{session})
                 );
