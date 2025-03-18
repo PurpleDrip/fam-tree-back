@@ -6,7 +6,7 @@ import { updateCache } from "../middlewares/cacheMiddleware";
 
 const router=e.Router();
 
-router.post("/addnode",validateUser,validateNode,uploadMiddleware,createNode,updateCache)
+router.post("/addnode",validateUser,uploadMiddleware,createNode,updateCache)
 router.post("/deletenode",validateUser,deleteNode,updateCache)
 
 router.put("/addimagestoid",validateUser,uploadMiddleware,addImages,updateCache)

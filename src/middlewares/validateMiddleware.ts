@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
 
 import Node from "../models/nodeModel";
+import multer from "multer";
 
 const TOKEN_NAME = process.env.TOKEN_NAME as string;
 
@@ -33,6 +34,13 @@ export const validateUser=(req:Request,res:Response,next:NextFunction):void=>{
             treeName,
             treeId
         };
+
+        res.locals.data={
+            treeName,
+            treeId,
+            type
+        };
+
         next();
     } catch (err) {
         res.status(401).json({ message: "Invalid token", error: (err as Error).message });
@@ -65,21 +73,31 @@ export const validateCookie=(req:Request,res:Response,next:NextFunction):void=>{
 }
 
 export const validateNode=async (req:Request,res:Response,next:NextFunction) : Promise<void> =>{
-    const {override,name}=req.body;
-
-    if(!override){
-        try{
-            const node=await Node.findOne({"data.name":name})
-
-            if(node){
-                res.status(400).json({success:false,message:"A node with this name already exists."});
-                return
-            }
-        }catch(err){
+    const parseForm = multer().none();
+    parseForm(req, res, async (err) => {
+        if (err) {
             console.log(err)
-            res.status(500).json({ success: false, message: "Error validating node" });
-            return;
+            return res.status(400).json({ success: false, message: "Error parsing form data" });
         }
-    }
-    next();
+
+        const { override, name } = req.body;
+
+        if (!name) {
+            return res.status(400).json({ success: false, message: "Node name is required." });
+        }
+
+        if (!override) {
+            try {
+                const existingNode = await Node.findOne({ "data.name": name }); 
+                if (existingNode) {
+                    return res.status(400).json({ success: false, message: "A node with this name already exists." });
+                }
+            } catch (err) {
+                console.error("Error validating node:", err);
+                return res.status(500).json({ success: false, message: "Error validating node" });
+            }
+        }
+
+        next();
+    });
 }
