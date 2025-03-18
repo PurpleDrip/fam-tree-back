@@ -53,7 +53,8 @@ export const registerTree=async (req:Request,res:Response,next:NextFunction):Pro
 export const loginTree=async (req:Request,res:Response,next:NextFunction):Promise<void> =>{
     try {
         const { treeName, password,adminPassword } = req.body;
-        let isMatch,type;
+        let isMatch=false;
+        let type="";
 
         const tree = await Tree.findOne({ treeName });
         if (!tree) {
@@ -61,17 +62,22 @@ export const loginTree=async (req:Request,res:Response,next:NextFunction):Promis
             return 
         }
 
-        if(adminPassword){
-            isMatch=await bcrypt.compare(adminPassword, tree.adminPassword);
+        try{
+            isMatch=await bcrypt.compare(password, tree.adminPassword);
             type="admin";
-        }else{
-            isMatch =await bcrypt.compare(password, tree.password);
-            type="user";
-        }
+            
+            if(!isMatch){
+                isMatch =await bcrypt.compare(password, tree.password);
+                type="user";
+            }
 
-        if (!isMatch) {
-            res.status(400).json({ success: false, message: "Invalid credentials" });
-            return 
+            if (!isMatch) {
+                res.status(400).json({ success: false, message: "Invalid credentials" });
+                return 
+            }
+        }catch(err){
+            res.status(500).json({message:"Error verifying passwords"})
+            return;
         }
 
         res.locals.data={
